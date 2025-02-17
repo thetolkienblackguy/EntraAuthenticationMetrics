@@ -28,7 +28,7 @@
     # Private Data
     PrivateData = @{
         PSData = @{
-            Tags         = @("Azure AD", "Entra ID", "Authentication", "Metrics")
+            Tags         = @("AzureAD","EntraID","Authentication","Metrics")
             LicenseUri   = "https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/LICENSE"
             ProjectUri   = "https://github.com/thetolkienblackguy/EntraAuthenticationMetrics"
             ReleaseNotes = "Initial module creation."
