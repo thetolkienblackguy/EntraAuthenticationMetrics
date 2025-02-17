@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Entra Authentication Metrics</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        <!-- STYLES -->
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-controls">
+            <h1>Entra Authentication Metrics</h1>
+            <div class="controls-group">
+                <div class="filter-container">
+                    <button class="filter-button" id="filterToggle">
+                        <span>Filter Status</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="filter-dropdown" id="filterDropdown">
+                        <label class="filter-option">
+                            <input type="checkbox" value="enabled" checked> Show Enabled
+                        </label>
+                        <label class="filter-option">
+                            <input type="checkbox" value="disabled" checked> Show Disabled
+                        </label>
+                    </div>
+                </div>
+                <button class="stats-button" id="statsButton">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>View Statistics</span>
+                </button>
+                <label class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-sun"></i>
+                    <div class="toggle-switch"></div>
+                    <i class="fas fa-moon"></i>
+                </label>
+            </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <div id="statsPanel" class="stats-panel"></div>
+
+        <div class="tabs" id="methodTabs">
+            <button class="tab active" data-tab="prmfa">Phishing-Resistant MFA</button>
+            <button class="tab" data-tab="fido2">FIDO2</button>
+            <button class="tab" data-tab="whfb">Windows Hello for Business</button>
+            <button class="tab" data-tab="cert">Certificate-based</button>
+            <button class="tab" data-tab="email">Email</button>
+            <!--<button class="tab" data-tab="password">Password</button>-->
+            <button class="tab" data-tab="phone">Phone</button>
+            <button class="tab" data-tab="authenticator">Authenticator App</button>
+            <button class="tab" data-tab="oath">Software OATH</button>
+            <button class="tab" data-tab="temp">Temporary Access</button>
+            <!--<button class="tab" data-tab="qrCode">QR Code</button>-->
+
+        </div>
+
+        <div class="search-container">
+            <input type="text" class="search" id="userSearch" placeholder="Search users...">
+        </div>
+
+        <div id="descriptionPanel" class="description-panel"></div>
+        <div id="contentPanel"></div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Authentication Statistics</h2>
+                <button class="close-button" id="closeStatsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="statsModalContent">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        <!-- SCRIPT -->
+    </script>
+</body>
+</html>
