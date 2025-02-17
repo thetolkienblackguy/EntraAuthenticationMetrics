@@ -8,6 +8,26 @@
 
 Track and visualize authentication methods in Entra ID (formerly Azure AD) with a focus on Phishing-Resistant authentication.
 
+## Dashboard Previews
+
+The EntraAuthenticationMetrics module provides comprehensive, interactive dashboards to help you understand and manage authentication methods in your organization:
+
+### Comprehensive Authentication Metrics
+A user-friendly interface that allows:
+- Filtering and searching users
+- Detailed view of Phishing-Resistant MFA status
+- Method-specific insights
+
+![Entra Authentication Metrics Dashboard](imgs/entra_authentication_metrics.png)
+
+### Authentication Statistics Dashboard
+This dashboard offers a detailed breakdown of authentication methods, highlighting:
+- Phishing-Resistant MFA adoption
+- Strong authentication method coverage
+- Standard and legacy authentication method usage
+
+![Authentication Statistics Dashboard](imgs/authentication_statistics.png)
+
 > **Version:** 0.0.1  
 > **Author:** Gabriel Delaney ([thetolkienblackguy.com](https://thetolkienblackguy.com) | [GitHub](https://github.com/thetolkienblackguy) )  
 > **Company:** Phoenix Horizons LLC  
@@ -232,4 +252,4 @@ user3@contoso.com,Enabled,False,True,False,True,False,False
 
 ## License
 
-This project is licensed under the terms in the LICENSE file.
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
