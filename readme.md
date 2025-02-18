@@ -13,7 +13,9 @@ Track and visualize authentication methods in Entra ID (formerly Azure AD) with 
 The EntraAuthenticationMetrics module provides comprehensive, interactive dashboards to help you understand and manage authentication methods in your organization:
 
 ### Comprehensive Authentication Metrics
+
 A user-friendly interface that allows:
+
 - Filtering and searching users
 - Detailed view of Phishing-Resistant MFA status
 - Method-specific insights
@@ -21,7 +23,9 @@ A user-friendly interface that allows:
 ![Entra Authentication Metrics Dashboard](imgs/entra_authentication_metrics.png)
 
 ### Authentication Statistics Dashboard
+
 This dashboard offers a detailed breakdown of authentication methods, highlighting:
+
 - Phishing-Resistant MFA adoption
 - Strong authentication method coverage
 - Standard and legacy authentication method usage
@@ -61,7 +65,7 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
   - Detailed statistics panel
 
 - 📋 **Reporting Options**
-  - CSV export for analysis
+  - Interactive HTML dashboard
   - Email delivery via Graph API
   - Custom filtering capabilities
 
@@ -143,52 +147,48 @@ Connect-MgGraph -ClientId $client_id -CertificateThumbprint "cert-thumbprint" -T
 
 ## Usage Guide
 
-### Report Generation Methods
+### Dashboard Generation Methods
 
-#### All Users Report
+#### All Users Dashboard
 
 ```powershell
-# Basic all users report
-$all_users_report = New-EAMAuthenticationReport -AllUsers
-
 # Generate dashboard for all users
 Invoke-EAMDashboardCreation -AllUsers
 
-# Export all users report
-$all_users_report = New-EAMAuthenticationReport -AllUsers
-$allUsersReport | Export-Csv -Path "all_users_report.csv" -NoTypeInformation
+# Generate dashboard and suppress certificate warning
+Invoke-EAMDashboardCreation -AllUsers -IgnoreCertificateWarning
+
+# Generate dashboard without opening in browser
+Invoke-EAMDashboardCreation -AllUsers -InvokeDashboard:$false
 ```
 
-#### Security Group Based Report
+#### Security Group Based Dashboard
 
 ```powershell
-# Get report for specific group
+# Create dashboard for specific group
 $group_id = "12345678-1234-1234-1234-123456789012"
-$group_report = New-EAMAuthenticationReport -GroupId $group_id
-
-# Create dashboard for group
 Invoke-EAMDashboardCreation -GroupId $group_id
 
-# Export group report
-$group_report | Export-Csv -Path "group_report.csv" -NoTypeInformation
+# Create from group with custom output path
+$dashboard_path = "C:\Reports\group_dashboard.html"
+Invoke-EAMDashboardCreation -GroupId $group_id
 ```
 
-#### Filter Based Report
+#### Filter Based Dashboard
 
 ```powershell
 # Filter examples
 
 # Users with specific domain
 $domain_filter = "endsWith(userPrincipalName,'@contoso.com')"
-$domain_report = New-EAMAuthenticationReport -Filter $domain_filter
+Invoke-EAMDashboardCreation -Filter $domain_filter
 
 # Users with specific display name pattern
 $name_filter = "startsWith(displayName,'A')"
-$name_report = New-EAMAuthenticationReport -Filter $name_filter
-
+Invoke-EAMDashboardCreation -Filter $name_filter
 ```
 
-#### CSV Import Report
+#### CSV Import Dashboard
 
 ```powershell
 # CSV file should contain a column with user identifiers (UPN or Object ID)
@@ -197,41 +197,46 @@ $name_report = New-EAMAuthenticationReport -Filter $name_filter
 # user1@contoso.com
 # user2@contoso.com
 
-# Generate report from CSV
-$csv_report = New-EAMAuthenticationReport -ImportCsv -Path ".\users.csv" -IdentityHeader "UserPrincipalName"
-
-# Create dashboard from CSV import
+# Generate dashboard from CSV
 Invoke-EAMDashboardCreation -ImportCsv -Path ".\users.csv" -IdentityHeader "UserPrincipalName"
-
-# Export processed report
-$csv_report | Export-Csv -Path "processed_report.csv" -NoTypeInformation
 ```
 
-### Email Reports
+### Email Dashboard
 
 ```powershell
 # Generate and email dashboard
-$report = New-EAMAuthenticationReport -AllUsers
-$dashboard_path = Join-Path $env:TEMP "auth_report.html"
-New-EAMDashboard -DataSet $report -Outfile $dashboard_path -InvokeDashboard:$false
+$dashboard_path = Join-Path $env:TEMP "auth_dashboard.html"
+Invoke-EAMDashboardCreation -AllUsers -InvokeDashboard:$false
 
-Send-EAMMailMessage -To "security-team@contoso.com" `
-                    -From "reports@contoso.com" `
-                    -Subject "Authentication Methods Report" `
-                    -Body "Please find attached the latest authentication methods dashboard." `
-                    -Attachments $dashboard_path
+Send-EAMMailMessage -To "security-team@contoso.com" -From "reports@contoso.com" -Subject "Authentication Methods Dashboard" -Body "Please find attached the latest authentication methods dashboard." -Attachments $dashboard_path
+```
+
+### Report Data Export
+
+You can also get the authentication report data in a format suitable for CSV export or use in other scripts:
+
+```powershell
+# Get authentication report data
+$auth_data = New-EAMAuthenticationReport -AllUsers
+
+# Export to CSV
+$auth_data | Export-Csv -Path "auth_report.csv" -NoTypeInformation
+
+# Use in other scripts or create dashboard
+Invoke-EAMDashboardCreation -InputObject $auth_data
 ```
 
 ## Sample Output
 
-### CSV Export Format
+### Dashboard Features
 
-```csv
-User,PRMFAStatus,Fido2,WindowsHelloForBusiness,Certificate,AuthenticatorApp,PhoneAuthentication,EmailAuthentication
-user1@contoso.com,Enabled,True,False,False,True,False,False
-user2@contoso.com,Disabled,False,False,False,True,True,False
-user3@contoso.com,Enabled,False,True,False,True,False,False
-```
+The interactive HTML dashboard provides:
+
+- Real-time user filtering and search
+- Method-specific views for detailed analysis
+- Dark/Light mode toggle
+- Comprehensive statistics panel
+- Exportable data tables
 
 ## Known Limitations
 
