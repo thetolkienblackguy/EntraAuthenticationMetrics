@@ -167,9 +167,6 @@ Invoke-EAMDashboardCreation -AllUsers -InvokeDashboard:$false
 $group_id = "12345678-1234-1234-1234-123456789012"
 Invoke-EAMDashboardCreation -GroupId $group_id
 
-# Create from group with custom output path
-$dashboard_path = "C:\Reports\group_dashboard.html"
-Invoke-EAMDashboardCreation -GroupId $group_id
 ```
 
 #### Filter Based Dashboard
@@ -203,7 +200,7 @@ Invoke-EAMDashboardCreation -ImportCsv -Path ".\users.csv" -IdentityHeader "User
 
 ```powershell
 # Generate and email dashboard
-$dashboard_path = Join-Path $env:TEMP "auth_dashboard.html"
+$dashboard_path = "$($PWD)\Entra_Authentication_Metrics_Dashboard.html"
 Invoke-EAMDashboardCreation -AllUsers -InvokeDashboard:$false
 
 Send-EAMMailMessage -To "security-team@contoso.com" -From "reports@contoso.com" -Subject "Authentication Methods Dashboard" -Body "Please find attached the latest authentication methods dashboard." -Attachments $dashboard_path
