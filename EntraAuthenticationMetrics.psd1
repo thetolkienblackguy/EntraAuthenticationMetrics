@@ -1,6 +1,6 @@
 @{
     # Module metadata
-    ModuleVersion       = "0.0.1"
+    ModuleVersion       = "0.0.2"
     GUID                = "49bc84ab-afe2-4659-9ff4-ca536efb6006"
     Author              = "Gabriel Delaney - gdelaney@phzconsulting.com | https://github.com/thetolkienblackguy"
     CompanyName         = "Phoenix Horizons LLC"
