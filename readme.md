@@ -1,10 +1,8 @@
 # EntraAuthenticationMetrics
 
-[![GitHub Release](https://img.shields.io/github/v/release/thetolkienblackguy/EntraAuthenticationMetrics.svg)](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/releases)
 [![PowerShell Gallery Version](https://img.shields.io/powershellgallery/v/EntraAuthenticationMetrics)](https://www.powershellgallery.com/packages/EntraAuthenticationMetrics)
 [![PSGallery Platform](https://img.shields.io/powershellgallery/p/EntraAuthenticationMetrics)](https://www.powershellgallery.com/packages/EntraAuthenticationMetrics)
 [![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/EntraAuthenticationMetrics)](https://www.powershellgallery.com/packages/EntraAuthenticationMetrics)
-[![License](https://img.shields.io/github/license/thetolkienblackguy/EntraAuthenticationMetrics)](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/LICENSE)
 
 Track and visualize authentication methods in Entra ID (formerly Azure AD) with a focus on Phishing-Resistant authentication.
 
@@ -20,7 +18,7 @@ A user-friendly interface that allows:
 - Detailed view of Phishing-Resistant MFA status
 - Method-specific insights
 
-![Entra Authentication Metrics Dashboard](imgs/entra_authentication_metrics.png)
+![Entra Authentication Metrics Dashboard](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/Imgs/dashboard.png)
 
 ### Authentication Statistics Dashboard
 
@@ -30,7 +28,7 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
 - Strong authentication method coverage
 - Standard and legacy authentication method usage
 
-![Authentication Statistics Dashboard](imgs/authentication_statistics.png)
+![Authentication Statistics Dashboard](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/Imgs/auth_stats.png)
 
 > **Version:** 0.0.1  
 > **Author:** Gabriel Delaney ([thetolkienblackguy.com](https://thetolkienblackguy.com) | [GitHub](https://github.com/thetolkienblackguy) )  
