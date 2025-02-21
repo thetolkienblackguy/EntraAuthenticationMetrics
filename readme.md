@@ -102,7 +102,7 @@ Import-Module EntraAuthenticationMetrics
 # Connect with required scopes
 Connect-MgGraph -Scopes @(
     "User.Read.All",
-    "Group.Read.All",
+    "GroupMember.Read.All",
     "UserAuthenticationMethod.Read.All"
 )
 ```
@@ -119,7 +119,7 @@ Connect-MgGraph -Scopes @(
    - Click "API Permissions"
    - Add Microsoft Graph permissions:
      - User.Read.All (Application)
-     - Group.Read.All (Application)
+     - GroupMember.Read.All (Application)
      - UserAuthenticationMethod.Read.All (Application)
      - Mail.Send (Application)
    - Grant admin consent
@@ -135,9 +135,10 @@ Connect-MgGraph -Scopes @(
 # Using client secret
 $client_id = "your-client-id"
 $client_secret = "your-client-secret" | ConvertTo-SecureString -AsPlainText -Force
+$client_secret_credential = New-Object System.Management.Automation.PSCredential($client_id, $client_secret)
 $tenant_id = "your-tenant-id"
 
-Connect-MgGraph -ClientId $client_id -ClientSecret $client_secret -TenantId $tenant_id
+Connect-MgGraph -ClientSecretCredential $client_secret_credential -TenantId $tenant_id
 
 # Or using certificate
 Connect-MgGraph -ClientId $client_id -CertificateThumbprint "cert-thumbprint" -TenantId $tenant_id
