@@ -114,6 +114,7 @@ Connect-MgGraph -Scopes @(
    - Name: "EntraAuthenticationMetrics"
    - Supported account type: Single tenant
    - Click Register
+   ![App Registration](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/Imgs/app_registration.png)
 
 3. Add Required Permissions:
    - Click "API Permissions"
@@ -123,6 +124,7 @@ Connect-MgGraph -Scopes @(
      - UserAuthenticationMethod.Read.All (Application)
      - Mail.Send (Application)
    - Grant admin consent
+   ![Graph API Permissions](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/Imgs/graph_api_permissions.png)
 
 4. Create Secret or Certificate:
    - Under "Certificates & secrets"
