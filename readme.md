@@ -78,7 +78,7 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
 
 1. **For Dashboard Generation**:
    - User.Read.All
-   - Group.Read.All
+   - GroupMember.Read.All
    - UserAuthenticationMethod.Read.All
 
 2. **For Email Functionality** (Additional):
