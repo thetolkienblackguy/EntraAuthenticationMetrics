@@ -41,7 +41,7 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
 3. [Installation](#installation)
 4. [Authentication Setup](#authentication-setup)
 5. [Usage Guide](#usage-guide)
-6. [Sample Output](#sample-output)
+6. [Dashboard Features](#dashboard-features)
 7. [Known Limitations](#known-limitations)
 
 ## Features
@@ -224,9 +224,7 @@ $auth_data | Export-Csv -Path "auth_report.csv" -NoTypeInformation
 Invoke-EAMDashboardCreation -InputObject $auth_data
 ```
 
-## Sample Output
-
-### Dashboard Features
+## Dashboard Features
 
 The interactive HTML dashboard provides:
 
@@ -234,7 +232,6 @@ The interactive HTML dashboard provides:
 - Method-specific views for detailed analysis
 - Dark/Light mode toggle
 - Comprehensive statistics panel
-- Exportable data tables
 
 ## Known Limitations
 
@@ -246,12 +243,10 @@ The interactive HTML dashboard provides:
 2. **Email Functionality**
    - Requires application (not delegated) permissions
    - Mail.Send permission must be granted at application level
-   - From address must be authorized in tenant
 
 3. **Large Environment Considerations**
    - Progress bars displayed for large queries
    - Consider filtering for better performance
-   - Use CSV export for large data sets
 
 ## License
 
