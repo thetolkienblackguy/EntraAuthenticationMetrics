@@ -30,7 +30,7 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
 
 ![Authentication Statistics Dashboard](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/Imgs/auth_stats.png)
 
-> **Version:** 0.0.1  
+> **Version:** 0.1.0  
 > **Author:** Gabriel Delaney ([thetolkienblackguy.com](https://thetolkienblackguy.com) | [GitHub](https://github.com/thetolkienblackguy) )  
 > **Company:** Phoenix Horizons LLC  
 

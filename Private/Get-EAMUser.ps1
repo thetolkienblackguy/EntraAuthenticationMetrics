@@ -65,6 +65,11 @@ Function Get-EAMUser {
     
     )
     Begin {
+        # Get the Microsoft Graph endpoint, if not already set
+        If (!$script:graph_endpoint) {
+            $script:graph_endpoint = Get-EAMGraphEndpoint
+        
+        }
     } Process {
         # Setting the filter based on the parameter set
         If ($PSCmdlet.ParameterSetName -eq "UserId") {
@@ -76,7 +81,7 @@ Function Get-EAMUser {
         }
         # Invoke-MgEAMRequest parameters
         $invoke_mg_params = @{}
-        $invoke_mg_params["Uri"] = "https://graph.microsoft.com/$apiVersion/users?`$count=true&`$filter=$filter&`$select=$($select -join ',')"
+        $invoke_mg_params["Uri"] = "$($script:graph_endpoint)/$apiVersion/users?`$count=true&`$filter=$filter&`$select=$($select -join ',')"
         $invoke_mg_params["Method"] = "GET"
         $invoke_mg_params["Headers"] = @{}
         $invoke_mg_params["Headers"]["ConsistencyLevel"] = "eventual"

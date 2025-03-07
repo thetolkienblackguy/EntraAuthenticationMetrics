@@ -15,8 +15,11 @@ Function Get-EAMGroupMember {
         .PARAMETER ExcludeGroups
         If specified, will exclude groups from the results.
 
-        .PARAMETER ExcludeUsers
-        If specified, will exclude users from the results.
+        .PARAMETER ApiVersion
+        The version of the API to use.
+
+        .PARAMETER Select
+        The properties to select from the results.
 
         .EXAMPLE
         Get-EAMGroupMember -GroupId "00000000-0000-0000-0000-000000000000"
@@ -28,31 +31,41 @@ Function Get-EAMGroupMember {
         Get-MgGroup -Filter "displayName eq 'My Group'" | Get-EAMGroupMember -Recursive
 
         .EXAMPLE
-        Get-MgGroup -Filter "displayName eq 'My Group'" | Get-EAMGroupMember -ExcludeGroups
+        Get-MgGroup -Filter "displayName eq 'My Group'" | Get-EAMGroupMember -ExcludeGroups -Select "Id","UserPrincipalName"
 
         .INPUTS
         System.String
         System.Management.Automation.SwitchParameter
 
         .OUTPUTS
-        System.Collections.Generic.List[psobject]
+        System.Object
 
     #>
-    [CmdletBinding(DefaultParameterSetName="Default")]
-    [OutputType([PSObject])]
+    [CmdletBinding()]
+    [OutputType([system.object])]
     Param (
         [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,ValueFromPipeline=$true)]
         [Alias("Id")]
         [string]$GroupId,
         [Parameter(Mandatory=$false)]
         [switch]$Recursive,
-        [Parameter(Mandatory=$false,ParameterSetName="ExcludeGroups")]
+        [Parameter(Mandatory=$false)]
         [switch]$ExcludeGroups,
-        [Parameter(Mandatory=$false,ParameterSetName="ExcludeUsers")]
-        [switch]$ExcludeUsers
-    
+        [ValidateSet("Beta","v1.0")]
+        [string]$ApiVersion = "v1.0",
+        [Parameter(Mandatory=$false)]
+        [string[]]$Select = @(
+            "Id","UserPrincipalName","Authorizationinfo"
+            
+        )
     )
     Begin {
+        # Get the Microsoft Graph endpoint, if not already set
+        If (!$script:graph_endpoint) {
+            $script:graph_endpoint = Get-EAMGraphEndpoint
+        
+        }
+
         # Set the endpoint and oData type based on the parameters
         $end_point = If ($recursive) {
             "transitiveMembers"
@@ -62,18 +75,15 @@ Function Get-EAMGroupMember {
         
         }
         # Set the oData type based on the parameters
-        $odata_type = If ($PSCmdlet.ParameterSetName -eq "ExcludeGroups") {
+        $odata_type = If ($ExcludeGroups) {
             "/microsoft.graph.user"
-        
-        } ElseIf ($PSCmdlet.ParameterSetName -eq "ExcludeUsers") {
-            "/microsoft.graph.group"
         
         } 
     } Process {
         # Invoke-MgEAMRequest parameters
         $invoke_mg_params = @{}
         $invoke_mg_params["Method"] = "GET"
-        $invoke_mg_params["Uri"] = "https://graph.microsoft.com/v1.0/groups/$($groupId)/$($end_point)$($odata_type)" 
+        $invoke_mg_params["Uri"] = "$($script:graph_endpoint)/$($apiVersion)/groups/$($groupId)/$($end_point)$($odata_type)?`$select=$($($select -join ","))" 
         $invoke_mg_params["OutputType"] = "PSObject"
         
         Try {

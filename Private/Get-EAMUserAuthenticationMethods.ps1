@@ -44,6 +44,11 @@ Function Get-EAMUserAuthenticationMethods {
     
     )
     Begin {
+        # Get the Microsoft Graph endpoint, if not already set
+        If (!$script:graph_endpoint) {
+            $script:graph_endpoint = Get-EAMGraphEndpoint
+        
+        }
         # Set the default parameter values
         $PSDefaultParameterValues = @{}
         $PSDefaultParameterValues["Add-Member:MemberType"] = "NoteProperty"
@@ -52,7 +57,7 @@ Function Get-EAMUserAuthenticationMethods {
     } Process {
         # Invoke-MgEAMRequest parameters
         $invoke_mg_params = @{}
-        $invoke_mg_params["Uri"] = "https://graph.microsoft.com/$apiVersion/users/$userId/authentication/methods"
+        $invoke_mg_params["Uri"] = "$($script:graph_endpoint)/$apiVersion/users/$userId/authentication/methods"
         $invoke_mg_params["Method"] = "GET"
         $invoke_mg_params["Headers"] = @{}
         $invoke_mg_params["Headers"]["ConsistencyLevel"] = "eventual"

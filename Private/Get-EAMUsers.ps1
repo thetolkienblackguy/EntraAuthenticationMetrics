@@ -47,7 +47,7 @@ Function Get-EAMUsers {
             return Get-EAMUser -All 
         
         } "Group" { 
-            return Get-EAMGroupMember -GroupId $groupId -ExcludeGroups -Recursive | Get-EAMUser 
+            return Get-EAMGroupMember -GroupId $groupId -ExcludeGroups -Recursive
         
         } "Filter" { 
             return Get-EAMUser -Filter $filter
