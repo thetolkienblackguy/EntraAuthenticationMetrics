@@ -5,7 +5,22 @@ All notable changes to EntraAuthenticationMetrics will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2025-02-26
+## [0.2.0] - 2025-03-09
+
+### Added
+
+- Downloads button to download data as csv from the dashboard
+- Tenant name and id header to the dashboard
+
+### Fixed
+
+- Change Temporary Access Pass method status logic.  Previously, if a TAP was associated with a user but was not usable due to expiration or one-time use it would still show up in the report as enabled.
+
+### Changed
+
+- "Status" header in the report to "Method Status"
+
+## [0.1.0] - 2025-03-07
 
 ### Added
 
