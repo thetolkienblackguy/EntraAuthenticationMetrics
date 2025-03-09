@@ -113,6 +113,12 @@ function New-EAMDashboard {
             # Insert javascript
             $html = $html.Replace('<!-- SCRIPT -->', $script)
 
+            # Insert tenant name and id
+            $tenant_info = Get-EAMTenantInfo
+            $tenant_name = $tenant_info.displayName
+            $tenant_id = $tenant_info.id
+            $html = $html.Replace('<!-- TENANTNAME -->', "$($tenant_name) ($($tenant_id))")
+
             # Convert data to json and insert into html
             $json = $dataSet | ConvertTo-Json
             $html = $html.Replace('const users = USERDATA;', "const users = $json;")

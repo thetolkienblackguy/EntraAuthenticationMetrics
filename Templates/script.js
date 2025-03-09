@@ -253,7 +253,7 @@ function createUserTable(tabKey) {
     thead.innerHTML = `
         <tr>
             <th>User</th>
-            <th>Status</th>
+            <th>Method Status</th>
             ${config.showAllMethods ? '<th>Enabled Methods</th>' : ''}
         </tr>
     `;
@@ -331,6 +331,114 @@ function filterUsersByStatus() {
     });
 }
 
+// Function to convert current view data to CSV
+function exportToCSV(tabKey) {
+    const config = methodConfig[tabKey];
+    const filename = `entra_auth_${tabKey}_${new Date().toISOString().slice(0,10)}.csv`;
+    
+    // Create CSV header based on tab type
+    let csvContent = "User,MethodStatus";
+    if (tabKey === 'prmfa' && config.showAllMethods) {
+        csvContent += ",EnabledMethods";
+    }
+    csvContent += "\n";
+    
+    // Filter rows based on current visibility (respect current search/filters)
+    const visibleRows = Array.from(document.querySelectorAll('table tbody tr'))
+        .filter(row => row.style.display !== 'none');
+    
+    // Add each visible row to CSV
+    visibleRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const userName = cells[0].textContent;
+        const status = cells[1].querySelector('.status').textContent.trim();
+        
+        let rowData = `"${userName}","${status}"`;
+        
+        // Add enabled methods for PRMFA tab
+        if (tabKey === 'prmfa' && config.showAllMethods && cells.length > 2) {
+            const methods = cells[2].textContent;
+            rowData += `,"${methods}"`;
+        }
+        
+        csvContent += rowData + "\n";
+    });
+    
+    // Create download link
+    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Function to export complete stats to CSV
+function exportStatsToCSV() {
+    const filename = `entra_auth_stats_${new Date().toISOString().slice(0,10)}.csv`;
+    
+    // Create header row
+    let csvContent = "Authentication Method,Status,Count,Percentage,Strength\n";
+    
+    // Add PRMFA summary
+    const totalUsers = users.length;
+    const prmfaUsers = users.filter(user => isPRMFAEnabled(user)).length;
+    const prmfaPercentage = ((prmfaUsers / totalUsers) * 100).toFixed(1);
+    
+    csvContent += `"Phishing-Resistant MFA",Summary,${prmfaUsers},${prmfaPercentage}%,Strong\n`;
+    
+    // Add all other methods
+    Object.entries(methodConfig).forEach(([key, config]) => {
+        if (key !== 'prmfa') {
+            const method = config.methods[0];
+            if (method) {
+                const enabledCount = users.filter(user => String(user[method]).toUpperCase() === "TRUE").length;
+                const percentage = ((enabledCount / totalUsers) * 100).toFixed(1);
+                
+                csvContent += `"${config.name}",Summary,${enabledCount},${percentage}%,${config.strength}\n`;
+            }
+        }
+    });
+    
+    // Create detailed user stats
+    csvContent += "\n\nUser,";
+    
+    // Add column for each authentication method
+    Object.entries(methodConfig).forEach(([key, config]) => {
+        if (key !== 'prmfa') {
+            csvContent += `"${config.name}",`;
+        }
+    });
+    csvContent += "PRMFA Status\n";
+    
+    // Add user data
+    users.forEach(user => {
+        csvContent += `"${user.User}",`;
+        
+        // Add status for each method
+        Object.entries(methodConfig).forEach(([key, config]) => {
+            if (key !== 'prmfa') {
+                const method = config.methods[0];
+                const status = method ? String(user[method]).toUpperCase() === "TRUE" : false;
+                csvContent += `"${status ? 'Enabled' : 'Disabled'}",`;
+            }
+        });
+        
+        // Add PRMFA status
+        csvContent += `"${isPRMFAEnabled(user) ? 'Enabled' : 'Disabled'}"\n`;
+    });
+    
+    // Create download link
+    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 function initializeEventListeners() {
     // Theme toggle
     const themeToggle = document.getElementById('themeToggle');
@@ -395,6 +503,26 @@ function initializeEventListeners() {
             statsModal.classList.remove('show');
         }
     });
+    
+    // Download current view as CSV
+    const downloadCurrentViewBtn = document.getElementById('downloadCurrentViewCSV');
+    if (downloadCurrentViewBtn) {
+        downloadCurrentViewBtn.addEventListener('click', () => {
+            // Get the currently active tab
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                exportToCSV(activeTab.dataset.tab);
+            }
+        });
+    }
+
+    // Download all stats as CSV
+    const downloadStatsBtn = document.getElementById('downloadStatsCSV');
+    if (downloadStatsBtn) {
+        downloadStatsBtn.addEventListener('click', () => {
+            exportStatsToCSV();
+        });
+    }
 }
 
 // Initialize

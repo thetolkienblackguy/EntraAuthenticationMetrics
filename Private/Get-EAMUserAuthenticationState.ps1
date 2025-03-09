@@ -51,9 +51,15 @@ function Get-EAMUserAuthenticationState {
         $methods = $inputObject | Get-EAMUserAuthenticationMethods
         foreach ($method in $methods) {
             $method_name = $method.authenticationMethod
-            if ($method_name) {
-                $auth_state.$($method_name) = $true
-                if ($method_name -in @("Fido2","WindowsHelloForBusiness")) {
+            If ($method_name) {
+                If ($method_name -eq "TemporaryAccessPass" -and !$method.isUsable) {
+                    $auth_state.$($method_name) = $false
+                
+                } Else {
+                    $auth_state.$($method_name) = $true
+                
+                }
+                If ($method_name -in @("Fido2","WindowsHelloForBusiness")) {
                     $auth_state.PRMFAStatus = "Enabled"
                 
                 }
