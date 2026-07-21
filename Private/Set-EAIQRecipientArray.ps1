@@ -1,4 +1,4 @@
-Function Set-EAMRecipientArray {
+Function Set-EAIQRecipientArray {
     <#
         .SYNOPSIS
         This is a helper function that sets the recipient array for the Send-GraphMailMessage function.

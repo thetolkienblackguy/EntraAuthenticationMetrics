@@ -1,10 +1,12 @@
 Function Send-EAMMailMessage {
     <#
-        .DESCRIPTION
-        This function sends an email message using the Microsoft Graph API.
-
         .SYNOPSIS
-        This function sends an email message using the Microsoft Graph API.
+        [Deprecated] Sends an email message using the Microsoft Graph API.
+
+        .DESCRIPTION
+        Deprecated backward-compatibility wrapper. Use Send-EAIQMailMessage instead.
+        This shim forwards all parameters to Send-EAIQMailMessage and will be removed
+        in a future release.
 
         .PARAMETER To
         Specifies the recipient(s) of the email message.
@@ -33,13 +35,6 @@ Function Send-EAMMailMessage {
         .PARAMETER SaveToSentItems
         Specifies whether to save the email message to the sent items folder.
 
-        .EXAMPLE
-        Send-EAMMailMessage -To "john.doe@contoso.com" -From "jane.doe@contoso.com" -Subject "Test" -Body "This is a test"
-
-        .EXAMPLE
-        Send-EAMMailMessage -To "john.doe@contoso.com" -From "jane.doe@contoso.com" -Subject "Test" -Body "This is a test" -Attachments "C:\Temp\test.txt"
-
-            .INPUTS
         .INPUTS
         System.String
         System.String[]
@@ -47,11 +42,14 @@ Function Send-EAMMailMessage {
         System.Boolean
 
         .OUTPUTS
-    
+
+        .EXAMPLE
+        Send-EAMMailMessage -To "john.doe@contoso.com" -From "jane.doe@contoso.com" -Subject "Test" -Body "This is a test"
+
     #>
     [CmdletBinding()]
     [OutputType()]
-    param (      
+    param(
         [Parameter(Mandatory=$true)]
         [Alias("Recipient")]
         [string[]]$To,
@@ -77,72 +75,11 @@ Function Send-EAMMailMessage {
 
     )
     Begin {
-        # Get the Microsoft Graph endpoint, if not already set
-        If (!$script:graph_endpoint) {
-            $script:graph_endpoint = Get-EAMGraphEndpoint
-        
-        }
-
-        # Creating parent message hash table
-        $mail_message = @{}
-        $mail_message["message"] = ""
-        $mail_message["saveToSentItems"] = $saveToSentItems
-           
-        # Creating message hash table
-        $message = @{}
-        $message["subject"] = $subject
-        $message["body"] = @{}
-        $message["body"]["contentType"] = "HTML"
-        $message["body"]["content"] = $body
-        $message["importance"] = $importance
-
-        # Creating recipient table
-        $recipient_table = @{}
-        $recipient_table["to"] = "toRecipients"
-        $recipient_table["cc"] = "ccRecipients"
-        $recipient_table["bcc"] = "bccRecipients"
-
-        Try {
-            # Setting recipients
-            foreach ($recipient_type in $recipient_table.Keys) {
-                If ($PSBoundParameters.ContainsKey($recipient_type)) {
-                    # Setting recipients
-                    $message[$recipient_table[$recipient_type]] = @(Set-EAMRecipientArray -Recipients $PSBoundParameters[$recipient_type])
-                
-                }
-            }
-
-            # Setting attachments
-            If ($PSBoundParameters.ContainsKey("Attachments")) {
-                $message["attachments"] = @(Set-EAMAttachmentArray -Attachments $attachments)
-
-            }
-        } Catch {
-            Write-Error $_ -ErrorAction Stop
-        
-        }
-
-        # Setting the message key
-        $mail_message["message"] = $message
-
-        # Setting the Invoke-MgGraphRequest parameters
-        $invoke_graph_params = @{}
-        $invoke_graph_params["Uri"] = "$($script:graph_endpoint)/v1.0/users/$from/sendMail"
-        $invoke_graph_params["Method"] = "Post"
-        $invoke_graph_params["Body"] = $mail_message | ConvertTo-Json -Depth 4
-        $invoke_graph_params["ContentType"] = "application/json"
-        $invoke_graph_params["OutputType"] = "PSObject"
+        Write-Warning "Send-EAMMailMessage is deprecated. Use Send-EAIQMailMessage instead."
 
     } Process {
-        Try {
-            # Sending the message
-            Invoke-MgGraphRequest @invoke_graph_params
-        
-        } Catch {
-            Write-Error $_
-        
-        }
-    } End {
+        Send-EAIQMailMessage @PSBoundParameters
 
     }
-} 
+
+}

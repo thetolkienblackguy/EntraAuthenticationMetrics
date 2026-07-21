@@ -1,25 +1,51 @@
-# Set default parameters
 $PSDefaultParameterValues["Get-ChildItem:File"] = $true
 $PSDefaultParameterValues["Join-Path:Path"] = $PSScriptRoot
 
-$script:template_path = Join-Path -ChildPath "Templates"
+$imports = @("Classes\Helpers", "Classes\Components", "Private", "Public")
 
-# Import all classes, private functions, and public functions
-Foreach ($import in @("Classes", "Private", "Public")) {
-    # Get the path to the import folder
-    $path = Join-Path -ChildPath "$($import)\*.ps1"
+ForEach ($import in $imports) {
+    $import_path = Join-Path -ChildPath $import
+    $get_child_params = @{}
+    $get_child_params["Path"] = $import_path
+    $get_child_params["Recurse"] = $true
+    $get_child_params["Include"] = "*.ps1"
 
-    # Get all the files in the import folder
-    $files = Get-ChildItem -Path $path -File
+    $files = Get-ChildItem @get_child_params
 
-    # Dot source all the files
-    Foreach ($file in $files) {
+    ForEach ($file in $files) {
         . $file.FullName
 
-        # Export public functions
         If ($import -eq "Public") {
             Export-ModuleMember -Function $file.BaseName
-        
+
         }
+
     }
+
+}
+
+# Export the backward-compatibility alias for the deprecated New-EAMDashboard function
+Export-ModuleMember -Alias "New-EntraAuthenticationMetricsDashboard"
+
+# Register type accelerators for all classes
+$type_accelerators = [psobject].Assembly.GetType("System.Management.Automation.TypeAccelerators")
+$class_folders = @("Classes\Helpers", "Classes\Components")
+
+ForEach ($folder in $class_folders) {
+    $folder_path = Join-Path -ChildPath $folder
+    $class_files = Get-ChildItem -Path $folder_path -Recurse -Include "*.ps1"
+
+    ForEach ($class_file in $class_files) {
+        $class_name = $class_file.BaseName
+        Try {
+            $type = Invoke-Expression "[type]'$class_name'"
+            $type_accelerators::Add($class_name, $type)
+
+        } Catch {
+            Write-Verbose "Could not register type accelerator for: $class_name"
+
+        }
+
+    }
+
 }

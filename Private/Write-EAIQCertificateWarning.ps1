@@ -1,4 +1,4 @@
-Function Write-EAMCertificateWarning {
+Function Write-EAIQCertificateWarning {
     <#
         .SYNOPSIS
         Writes a warning about the certificate based authentication.

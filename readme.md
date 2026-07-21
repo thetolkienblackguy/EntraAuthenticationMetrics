@@ -30,7 +30,7 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
 
 ![Authentication Statistics Dashboard](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/Imgs/auth_stats.png)
 
-> **Version:** 0.2.0  
+> **Version:** 0.3.0  
 > **Author:** Gabriel Delaney ([thetolkienblackguy.com](https://thetolkienblackguy.com) | [GitHub](https://github.com/thetolkienblackguy) )  
 > **Company:** Phoenix Horizons LLC  
 
@@ -57,10 +57,13 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
   - Temporary Access Pass
 
 - 📊 **Interactive Dashboard**
-  - Real-time filtering and search
-  - Dark/Light mode toggle
-  - Method-specific views
-  - Detailed statistics panel
+  - Master-detail view: per-user cards for every registered method
+  - Per-method **registered** and **last-used** dates (with relative age; stale methods highlighted)
+  - Passkey detail (type + model), Windows Hello key strength, TAP usability, QR Code + PIN
+  - Real-time filtering, search, and sorting
+  - Dark/Light mode toggle and adoption statistics (incl. Passkeys by Model)
+  - Method Inventory CSV export (one row per user/method)
+  - Registration capability (MFA / passwordless / SSPR, default method) from the Entra userRegistrationDetails report
 
 - 📋 **Reporting Options**
   - Interactive HTML dashboard
@@ -80,6 +83,7 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
    - User.Read.All
    - GroupMember.Read.All
    - UserAuthenticationMethod.Read.All
+   - AuditLog.Read.All (for the userRegistrationDetails registration report)
 
 2. **For Email Functionality** (Additional):
    - Mail.Send (Application permission only)
@@ -103,7 +107,8 @@ Import-Module EntraAuthenticationMetrics
 Connect-MgGraph -Scopes @(
     "User.Read.All",
     "GroupMember.Read.All",
-    "UserAuthenticationMethod.Read.All"
+    "UserAuthenticationMethod.Read.All",
+    "AuditLog.Read.All"
 )
 ```
 
@@ -122,6 +127,7 @@ Connect-MgGraph -Scopes @(
      - User.Read.All (Application)
      - GroupMember.Read.All (Application)
      - UserAuthenticationMethod.Read.All (Application)
+     - AuditLog.Read.All (Application)
      - Mail.Send (Application)
    - Grant admin consent
    ![Graph API Permissions](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/Imgs/graph_api_permissions.png)
@@ -153,14 +159,14 @@ Connect-MgGraph -ClientId $client_id -CertificateThumbprint "cert-thumbprint" -T
 #### All Users Dashboard
 
 ```powershell
-# Generate dashboard for all users
-Invoke-EAMDashboardCreation -AllUsers
+# Generate dashboard for all users (saved under .\EntraAuthenticationMetrics)
+Invoke-EAIQDashboardCreation -AllUsers
+
+# Generate dashboard and open it in the browser
+Invoke-EAIQDashboardCreation -AllUsers -OpenReport
 
 # Generate dashboard and suppress certificate warning
-Invoke-EAMDashboardCreation -AllUsers -IgnoreCertificateWarning
-
-# Generate dashboard without opening in browser
-Invoke-EAMDashboardCreation -AllUsers -InvokeDashboard:$false
+Invoke-EAIQDashboardCreation -AllUsers -IgnoreCertificateWarning
 ```
 
 #### Security Group Based Dashboard
@@ -168,7 +174,7 @@ Invoke-EAMDashboardCreation -AllUsers -InvokeDashboard:$false
 ```powershell
 # Create dashboard for specific group
 $group_id = "12345678-1234-1234-1234-123456789012"
-Invoke-EAMDashboardCreation -GroupId $group_id
+Invoke-EAIQDashboardCreation -GroupId $group_id
 
 ```
 
@@ -179,11 +185,11 @@ Invoke-EAMDashboardCreation -GroupId $group_id
 
 # Users with specific domain
 $domain_filter = "endsWith(userPrincipalName,'@contoso.com')"
-Invoke-EAMDashboardCreation -Filter $domain_filter
+Invoke-EAIQDashboardCreation -Filter $domain_filter
 
 # Users with specific display name pattern
 $name_filter = "startsWith(displayName,'A')"
-Invoke-EAMDashboardCreation -Filter $name_filter
+Invoke-EAIQDashboardCreation -Filter $name_filter
 ```
 
 #### CSV Import Dashboard
@@ -196,32 +202,32 @@ Invoke-EAMDashboardCreation -Filter $name_filter
 # user2@contoso.com
 
 # Generate dashboard from CSV
-Invoke-EAMDashboardCreation -ImportCsv -Path ".\users.csv" -IdentityHeader "UserPrincipalName"
+Invoke-EAIQDashboardCreation -ImportCsv -Path ".\users.csv" -IdentityHeader "UserPrincipalName"
 ```
 
 ### Email Dashboard
 
 ```powershell
-# Generate and email dashboard
-$dashboard_path = "$($PWD)\Entra_Authentication_Metrics_Dashboard.html"
-Invoke-EAMDashboardCreation -AllUsers -InvokeDashboard:$false
+# Generate and email dashboard (Invoke-EAIQDashboardCreation returns the report path)
+$dashboard_path = Invoke-EAIQDashboardCreation -AllUsers
 
-Send-EAMMailMessage -To "security-team@contoso.com" -From "reports@contoso.com" -Subject "Authentication Methods Dashboard" -Body "Please find attached the latest authentication methods dashboard." -Attachments $dashboard_path
+Send-EAIQMailMessage -To "security-team@contoso.com" -From "reports@contoso.com" -Subject "Authentication Methods Dashboard" -Body "Please find attached the latest authentication methods dashboard." -Attachments $dashboard_path
 ```
 
 ### Report Data Export
 
-You can also get the authentication report data in a format suitable for CSV export or use in other scripts:
+You can also get the authentication report data (including registration status columns) in a format suitable for CSV export or use in other scripts:
 
 ```powershell
 # Get authentication report data
+# Note: New-EAMAuthenticationReport is deprecated in favor of Invoke-EAIQDashboardCreation; it remains for backward compatibility.
 $auth_data = New-EAMAuthenticationReport -AllUsers
 
 # Export to CSV
 $auth_data | Export-Csv -Path "auth_report.csv" -NoTypeInformation
 
 # Use in other scripts or create dashboard
-Invoke-EAMDashboardCreation -InputObject $auth_data
+Invoke-EAIQDashboardCreation -InputObject $auth_data
 ```
 
 ## Dashboard Features
@@ -244,7 +250,13 @@ The interactive HTML dashboard provides:
    - Requires application (not delegated) permissions
    - Mail.Send permission must be granted at application level
 
-3. **Large Environment Considerations**
+3. **Beta Graph Endpoints**
+   - Per-method registered/last-used dates and passkey metadata come from the beta `/authentication/methods` endpoint (requires `UserAuthenticationMethod.Read.All`)
+   - Registration capability chips come from the beta `reports/authenticationMethods/userRegistrationDetails` report (requires `AuditLog.Read.All`); its "Registration data as of" timestamp reflects when Entra last refreshed the report
+   - `lastUsedDateTime` is populated by Entra and may be `null` (shown as "Never") for methods that have not been used or where usage is not yet recorded
+   - Beta Graph endpoints are subject to change
+
+4. **Large Environment Considerations**
    - Progress bars displayed for large queries
    - Consider filtering for better performance
 

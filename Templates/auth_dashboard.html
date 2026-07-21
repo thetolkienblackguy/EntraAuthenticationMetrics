@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}}</title>
+    {{STYLES}}
+</head>
+<body>
+    <div class="app-layout">
+        <header class="app-header">
+            <div class="header-left">
+                <h1>{{TITLE}}</h1>
+                <div class="tenant-info">{{TENANT_NAME}}</div>
+                <p class="timestamp">Generated: {{TIMESTAMP}} &middot; Registration data as of: {{DATA_AS_OF}}</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn" id="csv-export">Export Method Inventory CSV</button>
+                <div class="theme-toggle">
+                    <label for="theme-switch">Dark Mode</label>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-switch">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </header>
+
+        <nav class="tab-nav" id="tab-nav">
+            <button class="tab-btn active" data-tab="methods">Methods</button>
+            <button class="tab-btn" data-tab="statistics">Statistics</button>
+        </nav>
+
+        <section class="tab-panel active" data-panel="methods">
+            <section class="summary-cards" id="summary-cards"></section>
+            <section class="toolbar">
+                <input type="text" id="user-search" placeholder="Search users..." />
+                <select id="user-filter">
+                    <option value="all">All Users</option>
+                    <option value="prmfa">PRMFA Enabled</option>
+                    <option value="noPrmfa">No PRMFA</option>
+                    <option value="passkey">Has Passkey</option>
+                    <option value="none">No Methods</option>
+                </select>
+                <select id="reg-window">
+                    <option value="all">Registered: Any time</option>
+                    <option value="7">Registered: Last 7 days</option>
+                    <option value="14">Registered: Last 14 days</option>
+                    <option value="30">Registered: Last 30 days</option>
+                    <option value="180">Registered: Last 6 months</option>
+                </select>
+                <select id="user-sort">
+                    <option value="name">Sort: Name</option>
+                    <option value="methods">Sort: Method Count</option>
+                    <option value="prmfa">Sort: PRMFA First</option>
+                </select>
+            </section>
+            <section class="split-pane">
+                <div class="user-list" id="user-list"></div>
+                <div class="detail-pane" id="detail-pane">
+                    <div class="detail-empty">Select a user to view their authentication methods</div>
+                </div>
+            </section>
+        </section>
+
+        <section class="tab-panel" data-panel="statistics">
+            <div class="stats-scroll" id="statistics-content"></div>
+        </section>
+
+        {{FOOTER}}
+    </div>
+
+    <script>
+        {{DATA}}
+    </script>
+    {{SCRIPTS}}
+</body>
+</html>
