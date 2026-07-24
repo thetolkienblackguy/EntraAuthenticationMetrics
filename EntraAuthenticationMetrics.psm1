@@ -24,8 +24,17 @@ ForEach ($import in $imports) {
 
 }
 
-# Export the backward-compatibility alias for the deprecated New-EAMDashboard function
-Export-ModuleMember -Alias "New-EntraAuthenticationMetricsDashboard"
+# Backward-compatibility aliases for the former EAM-prefixed cmdlets. The old
+# names now resolve to the EAIQ cmdlets. New-EAMAuthenticationReport and
+# New-EAMDashboard had different behavior and were removed (see CHANGELOG).
+Set-Alias -Name "Invoke-EAMDashboardCreation" -Value "Invoke-EAIQDashboardCreation"
+Set-Alias -Name "Send-EAMMailMessage" -Value "Send-EAIQMailMessage"
+Set-Alias -Name "New-EntraAuthenticationMetricsDashboard" -Value "Invoke-EAIQDashboardCreation"
+Export-ModuleMember -Alias @(
+    "Invoke-EAMDashboardCreation",
+    "Send-EAMMailMessage",
+    "New-EntraAuthenticationMetricsDashboard"
+)
 
 # Register type accelerators for all classes
 $type_accelerators = [psobject].Assembly.GetType("System.Management.Automation.TypeAccelerators")

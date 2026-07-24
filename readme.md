@@ -30,19 +30,43 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
 
 ![Authentication Statistics Dashboard](https://github.com/thetolkienblackguy/EntraAuthenticationMetrics/blob/main/Imgs/auth_stats.png)
 
-> **Version:** 0.3.0  
+> **Version:** 0.4.0  
 > **Author:** Gabriel Delaney ([thetolkienblackguy.com](https://thetolkienblackguy.com) | [GitHub](https://github.com/thetolkienblackguy) )  
 > **Company:** Phoenix Horizons LLC  
 
 ## Table of Contents
 
-1. [Features](#features)
-2. [Prerequisites](#prerequisites)
-3. [Installation](#installation)
-4. [Authentication Setup](#authentication-setup)
-5. [Usage Guide](#usage-guide)
-6. [Dashboard Features](#dashboard-features)
-7. [Known Limitations](#known-limitations)
+1. [Breaking Changes (0.4.0)](#breaking-changes-040)
+2. [Features](#features)
+3. [Prerequisites](#prerequisites)
+4. [Installation](#installation)
+5. [Authentication Setup](#authentication-setup)
+6. [Usage Guide](#usage-guide)
+7. [Dashboard Features](#dashboard-features)
+8. [Known Limitations](#known-limitations)
+
+## Breaking Changes (0.4.0)
+
+The deprecated `EAM`-prefixed cmdlets are no longer exported as functions. Two are now aliases; two are removed outright.
+
+| Old cmdlet | Status in 0.4.0 | Use instead |
+| --- | --- | --- |
+| `Invoke-EAMDashboardCreation` | **Alias** of `Invoke-EAIQDashboardCreation` (identical parameters) | `Invoke-EAIQDashboardCreation` |
+| `Send-EAMMailMessage` | **Alias** of `Send-EAIQMailMessage` (identical parameters) | `Send-EAIQMailMessage` |
+| `New-EAMAuthenticationReport` | **Removed** (different behavior, not alias-able) | `Invoke-EAIQDashboardCreation`; Method Inventory CSV export for row data |
+| `New-EAMDashboard` | **Removed** (different parameters, not alias-able) | `Invoke-EAIQDashboardCreation -InputObject $data` |
+| `New-EntraAuthenticationMetricsDashboard` | Alias **repointed** to `Invoke-EAIQDashboardCreation` | `Invoke-EAIQDashboardCreation` |
+
+Notes:
+
+- The two aliases keep existing scripts working, but the previous runtime deprecation warning is gone. Move to the `EAIQ` names.
+- `New-EAMDashboard` accepted `-DataSet` / `-Outfile` / `-InvokeDashboard`. The equivalent is `Invoke-EAIQDashboardCreation -InputObject <rows> -FileName <name> -OpenReport`.
+
+### Other changes in 0.4.0
+
+- **User email column.** The Graph `mail` attribute is collected and shown under the user (list and detail) when it differs from the UPN, is searchable, and is added to the Method Inventory CSV export.
+- **PRMFA/MFA count fix.** `MFA Registered` is now derived so `PRMFA Enabled` is always a subset; it no longer reports fewer MFA-registered users than PRMFA users.
+- **Unknown registration state.** Users absent from the `userRegistrationDetails` report (for example, disabled users) show registration capability as `Unknown` rather than a misleading not-registered state.
 
 ## Features
 
@@ -60,9 +84,11 @@ This dashboard offers a detailed breakdown of authentication methods, highlighti
   - Master-detail view: per-user cards for every registered method
   - Per-method **registered** and **last-used** dates (with relative age; stale methods highlighted)
   - Passkey detail (type + model), Windows Hello key strength, TAP usability, QR Code + PIN
+  - User email shown alongside the UPN (when it differs), plus company and department in the detail; all searchable
   - Real-time filtering, search, and sorting
   - Dark/Light mode toggle and adoption statistics (incl. Passkeys by Model)
-  - Method Inventory CSV export (one row per user/method)
+  - Method Inventory CSV export (one row per user/method, includes email, company, department)
+  - Users Without MFA CSV export (one row per user with no registered MFA, for registration targeting)
   - Registration capability (MFA / passwordless / SSPR, default method) from the Entra userRegistrationDetails report
 
 - 📋 **Reporting Options**
@@ -216,19 +242,12 @@ Send-EAIQMailMessage -To "security-team@contoso.com" -From "reports@contoso.com"
 
 ### Report Data Export
 
-You can also get the authentication report data (including registration status columns) in a format suitable for CSV export or use in other scripts:
+Two CSV exports are available from the dashboard header:
 
-```powershell
-# Get authentication report data
-# Note: New-EAMAuthenticationReport is deprecated in favor of Invoke-EAIQDashboardCreation; it remains for backward compatibility.
-$auth_data = New-EAMAuthenticationReport -AllUsers
+- **Export Method Inventory CSV** - one row per user / method instance, including user email, company, department, method category, strength, and registered / last-used dates.
+- **Export Users Without MFA** - one row per user who has no registered MFA method (same effective definition as the summary), with email, company, department, method count, PRMFA status, and whether registration-report data was available. Use this to target a registration drive.
 
-# Export to CSV
-$auth_data | Export-Csv -Path "auth_report.csv" -NoTypeInformation
-
-# Use in other scripts or create dashboard
-Invoke-EAIQDashboardCreation -InputObject $auth_data
-```
+> The standalone `New-EAMAuthenticationReport` cmdlet was removed in 0.4.0. If you need the report rows in a variable for scripting, capture the report path from `Invoke-EAIQDashboardCreation` and use the dashboard CSV export, or open an issue if a dedicated data cmdlet would help your workflow.
 
 ## Dashboard Features
 
@@ -256,7 +275,11 @@ The interactive HTML dashboard provides:
    - `lastUsedDateTime` is populated by Entra and may be `null` (shown as "Never") for methods that have not been used or where usage is not yet recorded
    - Beta Graph endpoints are subject to change
 
-4. **Large Environment Considerations**
+4. **Disabled Users and Registration Report Coverage**
+   - Disabled accounts (`accountEnabled = false`) are excluded from all reporting, since they are not registration targets and Entra omits them from `userRegistrationDetails`
+   - The report still refreshes periodically, so a recently changed enabled user may briefly be missing from it; such users show registration capability (MFA / passwordless / SSPR, default method) as `Unknown` rather than `false`, while their live method data (including PRMFA and MFA Registered) is still shown
+
+5. **Large Environment Considerations**
    - Progress bars displayed for large queries
    - Consider filtering for better performance
 

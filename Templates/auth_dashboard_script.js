@@ -121,7 +121,7 @@ function filteredUsers() {
     const sort = document.getElementById("user-sort").value;
 
     let list = users.filter(u => {
-        const haystack = (String(u.User) + " " + String(u.Email || "")).toLowerCase();
+        const haystack = [u.User, u.Email, u.Company, u.Department].map(v => String(v || "")).join(" ").toLowerCase();
         if (!haystack.includes(term)) { return false; }
         if (regWindow !== "all" && !registeredWithin(u, parseInt(regWindow, 10))) { return false; }
         switch (filter) {
@@ -234,6 +234,8 @@ function renderDetail(u) {
         regChip("Passwordless Capable", u.IsPasswordlessCapable),
         regChip("SSPR Registered", u.IsSsprRegistered),
         regChip("Admin", u.IsAdmin, "info"),
+        u.Company ? chip(`Company: ${esc(u.Company)}`, true, "info") : "",
+        u.Department ? chip(`Dept: ${esc(u.Department)}`, true, "info") : "",
         chip(`Type: ${esc(u.UserType || "unknown")}`, true, "info"),
         chip(`Default: ${esc(u.DefaultMfaMethod || "none")}`, true, "info")
     ].join("");
@@ -381,20 +383,32 @@ function renderStatistics() {
 
 /* ---------- CSV (method inventory) ---------- */
 
-function exportInventory() {
-    const rows = [["User", "Email", "Category", "Strength", "Name", "Model", "Detail", "Registered", "LastUsed"]];
-    users.forEach(u => userMethods(u).forEach(m => {
-        rows.push([u.User, u.Email || "", m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || "", m.LastUsed || ""]);
-    }));
+function downloadCsv(filename, rows) {
     const csv = rows.map(r => r.map(c => `"${String(c == null ? "" : c).replace(/"/g, '""')}"`).join(",")).join("\n");
-
     const uri = encodeURI("data:text/csv;charset=utf-8," + csv);
     const link = document.createElement("a");
     link.setAttribute("href", uri);
-    link.setAttribute("download", `entra_auth_method_inventory_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function exportInventory() {
+    const rows = [["User", "Email", "Company", "Department", "Category", "Strength", "Name", "Model", "Detail", "Registered", "LastUsed"]];
+    users.forEach(u => userMethods(u).forEach(m => {
+        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || "", m.LastUsed || ""]);
+    }));
+    downloadCsv(`entra_auth_method_inventory_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+}
+
+// Users with no registered MFA method - the target list for a registration drive.
+function exportNoMfa() {
+    const rows = [["User", "Email", "Company", "Department", "MethodCount", "PRMFAStatus", "RegistrationDataKnown"]];
+    users.filter(u => !isMfaRegistered(u)).forEach(u => {
+        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", userMethods(u).length, u.PRMFAStatus, isTrue(u.HasRegistrationData) ? "Yes" : "No"]);
+    });
+    downloadCsv(`entra_users_without_mfa_${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }
 
 /* ---------- Navigation + events ---------- */
@@ -419,6 +433,7 @@ function initEvents() {
     document.getElementById("reg-window").addEventListener("change", renderUserList);
     document.getElementById("user-sort").addEventListener("change", renderUserList);
     document.getElementById("csv-export").addEventListener("click", exportInventory);
+    document.getElementById("csv-no-mfa").addEventListener("click", exportNoMfa);
 
     // Hover tooltip for the statistics bar charts
     const tip = document.createElement("div");

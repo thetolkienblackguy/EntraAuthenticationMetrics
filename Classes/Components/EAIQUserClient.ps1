@@ -1,7 +1,7 @@
 class EAIQUserClient {
     [EAIQGraphRequestClient]$Client
     [System.Collections.Generic.List[object]]$Users
-    hidden [string]$UserSelect = "id,userPrincipalName,mail,authorizationInfo"
+    hidden [string]$UserSelect = "id,userPrincipalName,mail,companyName,department,accountEnabled,authorizationInfo"
 
     EAIQUserClient([EAIQGraphRequestClient]$Client) {
         $this.Client = $Client
@@ -99,6 +99,13 @@ class EAIQUserClient {
 
     hidden [void]UpdateUsers([object[]]$Results) {
         ForEach ($item in $Results) {
+            # Disabled accounts are excluded from all reporting: they are not
+            # registration targets and Entra omits them from the registration report.
+            If ($item.accountEnabled -eq $false) {
+                Continue
+
+            }
+
             $this.Users.Add($item)
 
         }

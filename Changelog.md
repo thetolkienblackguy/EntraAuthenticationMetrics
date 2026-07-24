@@ -5,6 +5,29 @@ All notable changes to EntraAuthenticationMetrics will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-07-24
+
+### Removed (Breaking)
+
+- `New-EAMAuthenticationReport` and `New-EAMDashboard` are removed. They had different behavior and parameters from the `EAIQ` cmdlets, so they are not provided as aliases. Use `Invoke-EAIQDashboardCreation` to build the dashboard; for row-level data use the dashboard's Method Inventory CSV export.
+- The deprecated cmdlets are no longer exported as functions. `Invoke-EAMDashboardCreation` and `Send-EAMMailMessage` are now **aliases** of `Invoke-EAIQDashboardCreation` and `Send-EAIQMailMessage` (identical parameters), so existing calls keep working, but the runtime deprecation warning is gone.
+- `New-EntraAuthenticationMetricsDashboard` now aliases `Invoke-EAIQDashboardCreation` (previously the removed `New-EAMDashboard`); its parameters are those of `Invoke-EAIQDashboardCreation`.
+
+### Changed
+
+- Disabled accounts (`accountEnabled = false`) are now excluded from all reporting (dashboard, counts, and both CSV exports). They are not registration targets and Entra omits them from the `userRegistrationDetails` report, which previously showed them with an Unknown registration state.
+
+### Added
+
+- User email (the Graph `mail` attribute) is now collected and shown as a secondary line under the user in the list and detail header (only when it differs from the UPN), is included in user search, and is added as an `Email` column to the Method Inventory CSV export.
+- User company and department (the Graph `companyName` and `department` attributes) are collected and shown as info chips in the user detail header (when present), are included in user search, and are added as `Company` and `Department` columns to the Method Inventory CSV export.
+- "Users Without MFA" CSV export: a one-row-per-user list of everyone with no registered MFA method (using the same effective definition as the summary), including email, company, department, method count, PRMFA status, and whether registration-report data was available. Intended for targeting a registration drive.
+
+### Fixed
+
+- `MFA Registered` (summary and statistics) is now derived so `PRMFA Enabled` is always a subset: a user counts as MFA registered if they hold any registered method or Entra's report says so. This corrects counts where PRMFA Enabled exceeded MFA Registered (for example, users present in the live method data but absent from the registration report).
+- Users absent from the `userRegistrationDetails` report (for example, disabled users, which Entra excludes) now show registration capability as `Unknown` instead of a misleading not-registered (`false`) state. "No data" is no longer collapsed into "not registered."
+
 ## [0.3.0] - 2026-07-20
 
 ### Added

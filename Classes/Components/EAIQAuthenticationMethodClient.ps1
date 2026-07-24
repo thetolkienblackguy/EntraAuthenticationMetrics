@@ -58,6 +58,22 @@ class EAIQAuthenticationMethodClient {
 
         }
 
+        $record["Company"] = If ($User.companyName) {
+            $User.companyName
+
+        } Else {
+            ""
+
+        }
+
+        $record["Department"] = If ($User.department) {
+            $User.department
+
+        } Else {
+            ""
+
+        }
+
         $record["Id"] = $User.id
         $record["PRMFAStatus"] = If ($prmfa) {
             "Enabled"
