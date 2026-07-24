@@ -3,6 +3,7 @@ const users = reportData;
 
 let renderedUsers = [];
 let selectedId = null;
+const methodFilter = new Set();
 
 const STALE_DAYS = 180;
 
@@ -15,7 +16,10 @@ function esc(v) {
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-function isPRMFA(u) { return String(u.PRMFAStatus).toLowerCase() === "enabled"; }
+// MfaStatus and PrmfaStatus are computed once in the module (Registered /
+// Not Registered); PRMFA is always a subset of MFA.
+function isPRMFA(u) { return String(u.PrmfaStatus).toLowerCase() === "registered"; }
+function isMfaRegistered(u) { return String(u.MfaStatus).toLowerCase() === "registered"; }
 
 function userMethods(u) { return u.Methods || []; }
 
@@ -23,11 +27,6 @@ function hasEmail(u) { return u.Email && u.Email !== u.User; }
 
 // Report value is unknown when the user is absent from the registration report.
 function isUnknown(v) { return v === null || v === undefined || v === ""; }
-
-// A user is MFA registered if they hold any registered (non-password) method,
-// or Entra's report says so. This keeps PRMFA a strict subset of MFA registered
-// and uses the freshest signal (live methods) rather than only the report.
-function isMfaRegistered(u) { return userMethods(u).length > 0 || isTrue(u.IsMfaRegistered); }
 
 function isPasskey(m) { return !!m.PasskeyClass; }
 
@@ -124,6 +123,7 @@ function filteredUsers() {
         const haystack = [u.User, u.Email, u.Company, u.Department].map(v => String(v || "")).join(" ").toLowerCase();
         if (!haystack.includes(term)) { return false; }
         if (regWindow !== "all" && !registeredWithin(u, parseInt(regWindow, 10))) { return false; }
+        if (methodFilter.size && !userMethods(u).some(m => methodFilter.has(m.Category))) { return false; }
         switch (filter) {
             case "prmfa": return isPRMFA(u);
             case "noPrmfa": return !isPRMFA(u);
@@ -140,6 +140,52 @@ function filteredUsers() {
     });
 
     return list;
+}
+
+/* ---------- Method multi-select filter ---------- */
+
+function distinctCategories() {
+    const set = new Set();
+    users.forEach(u => userMethods(u).forEach(m => { if (m.Category) { set.add(m.Category); } }));
+    return Array.from(set).sort();
+}
+
+function methodFilterLabel() {
+    if (!methodFilter.size) { return "Methods: All"; }
+    if (methodFilter.size === 1) { return "Methods: " + Array.from(methodFilter)[0]; }
+    return `Methods: ${methodFilter.size} selected`;
+}
+
+function renderMethodFilter() {
+    const host = document.getElementById("method-filter");
+    if (!host) { return; }
+    const cats = distinctCategories();
+    const opts = cats.length
+        ? cats.map(c => `<label class="ms-opt"><input type="checkbox" value="${esc(c)}"${methodFilter.has(c) ? " checked" : ""}><span>${esc(c)}</span></label>`).join("")
+        : `<div class="ms-empty">No methods found</div>`;
+    host.innerHTML = `<button type="button" class="ms-btn" id="ms-toggle">${esc(methodFilterLabel())} <span class="caret">&#9662;</span></button>
+        <div class="ms-panel hidden" id="ms-panel">
+            <div class="ms-actions"><button type="button" id="ms-clear">Clear</button></div>
+            ${opts}
+        </div>`;
+
+    const panel = document.getElementById("ms-panel");
+    document.getElementById("ms-toggle").addEventListener("click", e => {
+        e.stopPropagation();
+        panel.classList.toggle("hidden");
+    });
+    host.querySelectorAll(".ms-opt input").forEach(cb => {
+        cb.addEventListener("change", () => {
+            if (cb.checked) { methodFilter.add(cb.value); } else { methodFilter.delete(cb.value); }
+            document.getElementById("ms-toggle").firstChild.textContent = methodFilterLabel() + " ";
+            renderUserList();
+        });
+    });
+    document.getElementById("ms-clear").addEventListener("click", () => {
+        methodFilter.clear();
+        renderMethodFilter();
+        renderUserList();
+    });
 }
 
 function renderUserList() {
@@ -395,20 +441,29 @@ function downloadCsv(filename, rows) {
 }
 
 function exportInventory() {
-    const rows = [["User", "Email", "Company", "Department", "Category", "Strength", "Name", "Model", "Detail", "Registered", "LastUsed"]];
+    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "Category", "Strength", "Name", "Model", "Detail", "Registered", "LastUsed"]];
     users.forEach(u => userMethods(u).forEach(m => {
-        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || "", m.LastUsed || ""]);
+        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", u.MfaStatus, u.PrmfaStatus, m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || "", m.LastUsed || ""]);
     }));
     downloadCsv(`entra_auth_method_inventory_${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }
 
-// Users with no registered MFA method - the target list for a registration drive.
+// Users with no registered MFA method at all - highest-priority registration targets.
 function exportNoMfa() {
-    const rows = [["User", "Email", "Company", "Department", "MethodCount", "PRMFAStatus", "RegistrationDataKnown"]];
+    const rows = [["User", "Email", "Company", "Department", "DefaultMfaMethod", "RegistrationDataKnown"]];
     users.filter(u => !isMfaRegistered(u)).forEach(u => {
-        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", userMethods(u).length, u.PRMFAStatus, isTrue(u.HasRegistrationData) ? "Yes" : "No"]);
+        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", u.DefaultMfaMethod || "none", isTrue(u.HasRegistrationData) ? "Yes" : "No"]);
     });
     downloadCsv(`entra_users_without_mfa_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+}
+
+// Users who have MFA but no phishing-resistant method - the PRMFA upgrade targets.
+function exportNoPrmfa() {
+    const rows = [["User", "Email", "Company", "Department", "DefaultMfaMethod", "MethodCount"]];
+    users.filter(u => isMfaRegistered(u) && !isPRMFA(u)).forEach(u => {
+        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", u.DefaultMfaMethod || "none", userMethods(u).length]);
+    });
+    downloadCsv(`entra_users_without_prmfa_${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }
 
 /* ---------- Navigation + events ---------- */
@@ -433,7 +488,15 @@ function initEvents() {
     document.getElementById("reg-window").addEventListener("change", renderUserList);
     document.getElementById("user-sort").addEventListener("change", renderUserList);
     document.getElementById("csv-export").addEventListener("click", exportInventory);
+
+    // Close the method dropdown when clicking outside it
+    document.addEventListener("click", e => {
+        const host = document.getElementById("method-filter");
+        const panel = document.getElementById("ms-panel");
+        if (panel && host && !host.contains(e.target)) { panel.classList.add("hidden"); }
+    });
     document.getElementById("csv-no-mfa").addEventListener("click", exportNoMfa);
+    document.getElementById("csv-no-prmfa").addEventListener("click", exportNoPrmfa);
 
     // Hover tooltip for the statistics bar charts
     const tip = document.createElement("div");
@@ -469,6 +532,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("theme-switch").checked = savedTheme === "dark";
 
     renderSummaryCards();
+    renderMethodFilter();
     renderUserList();
     renderStatistics();
     initEvents();

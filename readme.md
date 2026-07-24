@@ -87,8 +87,10 @@ Notes:
   - User email shown alongside the UPN (when it differs), plus company and department in the detail; all searchable
   - Real-time filtering, search, and sorting
   - Dark/Light mode toggle and adoption statistics (incl. Passkeys by Model)
-  - Method Inventory CSV export (one row per user/method, includes email, company, department)
-  - Users Without MFA CSV export (one row per user with no registered MFA, for registration targeting)
+  - Per-user `MfaStatus` and `PrmfaStatus` (Registered / Not Registered), tracked separately
+  - Method Inventory CSV export (one row per user/method, includes email, company, department, both statuses)
+  - Users Without MFA CSV export (no registered MFA at all: highest-priority targets)
+  - Users Without PRMFA CSV export (have MFA but no phishing-resistant method: upgrade targets)
   - Registration capability (MFA / passwordless / SSPR, default method) from the Entra userRegistrationDetails report
 
 - 📋 **Reporting Options**
@@ -242,10 +244,11 @@ Send-EAIQMailMessage -To "security-team@contoso.com" -From "reports@contoso.com"
 
 ### Report Data Export
 
-Two CSV exports are available from the dashboard header:
+Three CSV exports are available from the dashboard header:
 
-- **Export Method Inventory CSV** - one row per user / method instance, including user email, company, department, method category, strength, and registered / last-used dates.
-- **Export Users Without MFA** - one row per user who has no registered MFA method (same effective definition as the summary), with email, company, department, method count, PRMFA status, and whether registration-report data was available. Use this to target a registration drive.
+- **Export Method Inventory CSV** - one row per user / method instance, including user email, company, department, `MfaStatus`, `PrmfaStatus`, method category, strength, and registered / last-used dates.
+- **Export Users Without MFA** - one row per user with no registered MFA method at all, with email, company, department, default MFA method, and whether registration-report data was available. Highest-priority registration targets.
+- **Export Users Without PRMFA** - one row per user who has MFA but no phishing-resistant method, with email, company, department, default MFA method, and method count. The PRMFA upgrade targets. Together with the no-MFA list this covers everyone lacking phishing-resistant MFA.
 
 > The standalone `New-EAMAuthenticationReport` cmdlet was removed in 0.4.0. If you need the report rows in a variable for scripting, capture the report path from `Invoke-EAIQDashboardCreation` and use the dashboard CSV export, or open an issue if a dedicated data cmdlet would help your workflow.
 

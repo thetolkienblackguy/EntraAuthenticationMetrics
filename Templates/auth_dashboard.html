@@ -17,6 +17,7 @@
             <div class="header-actions">
                 <button class="btn" id="csv-export">Export Method Inventory CSV</button>
                 <button class="btn" id="csv-no-mfa">Export Users Without MFA</button>
+                <button class="btn" id="csv-no-prmfa">Export Users Without PRMFA</button>
                 <div class="theme-toggle">
                     <label for="theme-switch">Dark Mode</label>
                     <label class="switch">
@@ -55,6 +56,7 @@
                     <option value="methods">Sort: Method Count</option>
                     <option value="prmfa">Sort: PRMFA First</option>
                 </select>
+                <div class="ms" id="method-filter"></div>
             </section>
             <section class="split-pane">
                 <div class="user-list" id="user-list"></div>

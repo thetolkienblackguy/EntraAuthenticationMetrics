@@ -75,16 +75,29 @@ class EAIQAuthenticationMethodClient {
         }
 
         $record["Id"] = $User.id
-        $record["PRMFAStatus"] = If ($prmfa) {
-            "Enabled"
+        $record["MethodCount"] = $method_instances.Count
+        $this.AddRegistrationDetails($record, $User.id, $RegistrationLookup)
+
+        # Two tracked statuses. MFA is registered if the user holds any method or
+        # the registration report says so; PRMFA requires a phishing-resistant
+        # method. PRMFA is always a subset of MFA.
+        $mfa_registered = ($method_instances.Count -gt 0) -or ($record["IsMfaRegistered"] -eq $true)
+        $record["MfaStatus"] = If ($mfa_registered) {
+            "Registered"
 
         } Else {
-            "Disabled"
+            "Not Registered"
 
         }
 
-        $record["MethodCount"] = $method_instances.Count
-        $this.AddRegistrationDetails($record, $User.id, $RegistrationLookup)
+        $record["PrmfaStatus"] = If ($prmfa) {
+            "Registered"
+
+        } Else {
+            "Not Registered"
+
+        }
+
         $record["Methods"] = $method_instances
 
         $this.Report.Add([pscustomobject]$record)

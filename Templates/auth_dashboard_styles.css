@@ -137,6 +137,40 @@ input:checked + .slider:before { transform: translateX(24px); }
 .toolbar input { flex: 1; min-width: 200px; }
 .toolbar input:focus, .toolbar select:focus { outline: none; border-color: var(--accent); }
 
+/* Multi-select method filter */
+.ms { position: relative; }
+.ms-btn {
+    padding: 8px 12px; border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm); background: var(--bg-card);
+    color: var(--text-primary); font-size: 0.85rem; font-family: var(--font-family);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.ms-btn:hover { border-color: var(--accent); }
+.ms-btn .caret { color: var(--text-muted); font-size: 0.7rem; }
+.ms-panel {
+    position: absolute; z-index: 20; top: calc(100% + 4px); right: 0;
+    min-width: 240px; max-height: 280px; overflow-y: auto;
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm); box-shadow: var(--shadow-md); padding: 6px;
+}
+.ms-panel.hidden { display: none; }
+.ms-actions {
+    display: flex; justify-content: flex-end; padding: 2px 6px 6px;
+    border-bottom: 1px solid var(--border-color); margin-bottom: 4px;
+}
+.ms-actions button {
+    background: none; border: none; color: var(--accent); cursor: pointer;
+    font-size: 0.78rem; font-family: var(--font-family); padding: 2px;
+}
+.ms-opt {
+    display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem; color: var(--text-primary);
+}
+.ms-opt:hover { background: var(--bg-card-hover); }
+.ms-opt input { accent-color: var(--accent); width: 14px; height: 14px; flex-shrink: 0; margin: 0; }
+.ms-opt span { flex: 1; }
+.ms-empty { padding: 8px; color: var(--text-muted); font-size: 0.82rem; }
+
 /* Master-detail */
 .split-pane {
     display: grid; grid-template-columns: 340px 1fr; gap: 12px;

@@ -15,13 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Disabled accounts (`accountEnabled = false`) are now excluded from all reporting (dashboard, counts, and both CSV exports). They are not registration targets and Entra omits them from the `userRegistrationDetails` report, which previously showed them with an Unknown registration state.
+- Disabled accounts (`accountEnabled = false`) are now excluded from all reporting (dashboard, counts, and CSV exports). They are not registration targets and Entra omits them from the `userRegistrationDetails` report, which previously showed them with an Unknown registration state.
+- Per-user status is now tracked as two clearly-named fields, `MfaStatus` and `PrmfaStatus`, each `Registered` / `Not Registered`. This replaces the single `PRMFAStatus` field whose `Enabled` / `Disabled` values only described phishing-resistant coverage and were easily confused with the account state. Both statuses are computed once in the module (PRMFA is always a subset of MFA) and are included as columns in the Method Inventory CSV export.
 
 ### Added
 
 - User email (the Graph `mail` attribute) is now collected and shown as a secondary line under the user in the list and detail header (only when it differs from the UPN), is included in user search, and is added as an `Email` column to the Method Inventory CSV export.
 - User company and department (the Graph `companyName` and `department` attributes) are collected and shown as info chips in the user detail header (when present), are included in user search, and are added as `Company` and `Department` columns to the Method Inventory CSV export.
-- "Users Without MFA" CSV export: a one-row-per-user list of everyone with no registered MFA method (using the same effective definition as the summary), including email, company, department, method count, PRMFA status, and whether registration-report data was available. Intended for targeting a registration drive.
+- "Users Without MFA" CSV export: a one-row-per-user list of everyone with no registered MFA method, including email, company, department, default MFA method, and whether registration-report data was available. Highest-priority registration targets.
+- "Users Without PRMFA" CSV export: a one-row-per-user list of users who have MFA but no phishing-resistant method (disjoint from the no-MFA list; together they cover everyone lacking PRMFA), including email, company, department, default MFA method, and method count. The PRMFA upgrade targets.
 
 ### Fixed
 
