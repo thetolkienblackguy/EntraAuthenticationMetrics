@@ -19,6 +19,16 @@ function isPRMFA(u) { return String(u.PRMFAStatus).toLowerCase() === "enabled"; 
 
 function userMethods(u) { return u.Methods || []; }
 
+function hasEmail(u) { return u.Email && u.Email !== u.User; }
+
+// Report value is unknown when the user is absent from the registration report.
+function isUnknown(v) { return v === null || v === undefined || v === ""; }
+
+// A user is MFA registered if they hold any registered (non-password) method,
+// or Entra's report says so. This keeps PRMFA a strict subset of MFA registered
+// and uses the freshest signal (live methods) rather than only the report.
+function isMfaRegistered(u) { return userMethods(u).length > 0 || isTrue(u.IsMfaRegistered); }
+
 function isPasskey(m) { return !!m.PasskeyClass; }
 
 function hasPasskey(u) { return userMethods(u).some(isPasskey); }
@@ -92,7 +102,7 @@ function renderSummaryCards() {
     const total = users.length;
     const prmfa = users.filter(isPRMFA).length;
     const passkey = users.filter(hasPasskey).length;
-    const mfaReg = users.filter(u => isTrue(u.IsMfaRegistered)).length;
+    const mfaReg = users.filter(isMfaRegistered).length;
 
     document.getElementById("summary-cards").innerHTML = [
         card("Total Users", total, "", ""),
@@ -111,7 +121,8 @@ function filteredUsers() {
     const sort = document.getElementById("user-sort").value;
 
     let list = users.filter(u => {
-        if (!String(u.User).toLowerCase().includes(term)) { return false; }
+        const haystack = (String(u.User) + " " + String(u.Email || "")).toLowerCase();
+        if (!haystack.includes(term)) { return false; }
         if (regWindow !== "all" && !registeredWithin(u, parseInt(regWindow, 10))) { return false; }
         switch (filter) {
             case "prmfa": return isPRMFA(u);
@@ -138,8 +149,10 @@ function renderUserList() {
     const items = renderedUsers.map(u => {
         const selected = u.Id === selectedId ? " selected" : "";
         const prmfaCls = isPRMFA(u) ? " prmfa" : "";
+        const emailLine = hasEmail(u) ? `<div class="item-sub">${esc(u.Email)}</div>` : "";
         return `<div class="user-list-item${prmfaCls}${selected}" data-id="${esc(u.Id)}">
             <div class="item-name">${esc(u.User)}</div>
+            ${emailLine}
             <div class="item-meta">
                 <span>${visibleMethods(u).length} method(s)</span>
                 <span class="status-pill ${isPRMFA(u) ? "enabled" : "disabled"}">${isPRMFA(u) ? "PRMFA" : "No PRMFA"}</span>
@@ -162,6 +175,13 @@ function renderUserList() {
 
 function chip(label, on, cls) {
     return `<span class="chip ${on ? (cls || "on") : ""}">${label}</span>`;
+}
+
+// Report-derived chip that shows "Unknown" when the user is absent from the
+// registration report, instead of a misleading "off" state.
+function regChip(label, v, cls) {
+    if (isUnknown(v)) { return `<span class="chip">${label}: Unknown</span>`; }
+    return chip(label, isTrue(v), cls);
 }
 
 function methodCard(m) {
@@ -209,11 +229,11 @@ function renderDetail(u) {
     }
 
     const chips = [
-        chip("MFA Registered", isTrue(u.IsMfaRegistered)),
-        chip("MFA Capable", isTrue(u.IsMfaCapable)),
-        chip("Passwordless Capable", isTrue(u.IsPasswordlessCapable)),
-        chip("SSPR Registered", isTrue(u.IsSsprRegistered)),
-        chip("Admin", isTrue(u.IsAdmin), "info"),
+        chip("MFA Registered", isMfaRegistered(u)),
+        regChip("MFA Capable", u.IsMfaCapable),
+        regChip("Passwordless Capable", u.IsPasswordlessCapable),
+        regChip("SSPR Registered", u.IsSsprRegistered),
+        regChip("Admin", u.IsAdmin, "info"),
         chip(`Type: ${esc(u.UserType || "unknown")}`, true, "info"),
         chip(`Default: ${esc(u.DefaultMfaMethod || "none")}`, true, "info")
     ].join("");
@@ -221,7 +241,10 @@ function renderDetail(u) {
     document.getElementById("detail-pane").innerHTML = `
         <div class="detail-header">
             <div class="detail-title-row">
-                <div class="detail-title">${esc(u.User)}</div>
+                <div>
+                    <div class="detail-title">${esc(u.User)}</div>
+                    ${hasEmail(u) ? `<div class="detail-sub">${esc(u.Email)}</div>` : ""}
+                </div>
                 <span class="status-pill ${isPRMFA(u) ? "enabled" : "disabled"}">${isPRMFA(u) ? "PRMFA Enabled" : "No PRMFA"}</span>
             </div>
             <div class="chip-row">${chips}</div>
@@ -273,7 +296,7 @@ function renderStatistics() {
     const total = users.length;
     const prmfa = users.filter(isPRMFA).length;
     const passkey = users.filter(hasPasskey).length;
-    const mfaReg = users.filter(u => isTrue(u.IsMfaRegistered)).length;
+    const mfaReg = users.filter(isMfaRegistered).length;
 
     let html = `<section class="stats-section">
         <h2>Adoption Overview</h2>
@@ -359,9 +382,9 @@ function renderStatistics() {
 /* ---------- CSV (method inventory) ---------- */
 
 function exportInventory() {
-    const rows = [["User", "Category", "Strength", "Name", "Model", "Detail", "Registered", "LastUsed"]];
+    const rows = [["User", "Email", "Category", "Strength", "Name", "Model", "Detail", "Registered", "LastUsed"]];
     users.forEach(u => userMethods(u).forEach(m => {
-        rows.push([u.User, m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || "", m.LastUsed || ""]);
+        rows.push([u.User, u.Email || "", m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || "", m.LastUsed || ""]);
     }));
     const csv = rows.map(r => r.map(c => `"${String(c == null ? "" : c).replace(/"/g, '""')}"`).join(",")).join("\n");
 

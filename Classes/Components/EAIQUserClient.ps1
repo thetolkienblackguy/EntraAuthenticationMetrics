@@ -1,7 +1,7 @@
 class EAIQUserClient {
     [EAIQGraphRequestClient]$Client
     [System.Collections.Generic.List[object]]$Users
-    hidden [string]$UserSelect = "id,userPrincipalName,authorizationInfo"
+    hidden [string]$UserSelect = "id,userPrincipalName,mail,authorizationInfo"
 
     EAIQUserClient([EAIQGraphRequestClient]$Client) {
         $this.Client = $Client

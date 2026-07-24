@@ -152,6 +152,7 @@ input:checked + .slider:before { transform: translateX(24px); }
 .user-list-item.selected { background: var(--bg-selected); border-left-color: var(--accent); }
 .user-list-item.prmfa { border-left-color: var(--state-enabled); }
 .user-list-item .item-name { font-weight: 600; font-size: 0.88rem; word-break: break-word; }
+.user-list-item .item-sub { font-size: 0.72rem; color: var(--text-muted); word-break: break-word; margin-top: 1px; }
 .user-list-item .item-meta {
     font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;
     display: flex; align-items: center; gap: 8px;
@@ -171,6 +172,7 @@ input:checked + .slider:before { transform: translateX(24px); }
 .detail-header { border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 16px; }
 .detail-title-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .detail-title { font-size: 1.2rem; font-weight: 700; word-break: break-word; }
+.detail-sub { font-size: 0.85rem; color: var(--text-muted); word-break: break-word; margin-top: 2px; }
 .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .chip {
     display: inline-flex; align-items: center; gap: 5px;

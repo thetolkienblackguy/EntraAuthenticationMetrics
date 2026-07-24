@@ -50,6 +50,14 @@ class EAIQAuthenticationMethodClient {
 
         $record = [ordered]@{}
         $record["User"] = $User.userPrincipalName
+        $record["Email"] = If ($User.mail) {
+            $User.mail
+
+        } Else {
+            ""
+
+        }
+
         $record["Id"] = $User.id
         $record["PRMFAStatus"] = If ($prmfa) {
             "Enabled"
@@ -237,33 +245,53 @@ class EAIQAuthenticationMethodClient {
 
         }
 
-        $Record["IsMfaRegistered"] = [bool]$detail.isMfaRegistered
-        $Record["IsMfaCapable"] = [bool]$detail.isMfaCapable
-        $Record["IsPasswordlessCapable"] = [bool]$detail.isPasswordlessCapable
-        $Record["IsSsprRegistered"] = [bool]$detail.isSsprRegistered
-        $Record["IsSsprCapable"] = [bool]$detail.isSsprCapable
-        $Record["IsAdmin"] = [bool]$detail.isAdmin
-        $Record["UserType"] = If ($detail.userType) {
-            $detail.userType
+        # When a user is absent from the userRegistrationDetails report (for
+        # example, disabled users, which Entra excludes) the report fields are
+        # left null so "no data" is not mistaken for "not registered".
+        $has_data = [bool]$detail
+        $Record["HasRegistrationData"] = $has_data
+
+        If ($has_data) {
+            $Record["IsMfaRegistered"] = [bool]$detail.isMfaRegistered
+            $Record["IsMfaCapable"] = [bool]$detail.isMfaCapable
+            $Record["IsPasswordlessCapable"] = [bool]$detail.isPasswordlessCapable
+            $Record["IsSsprRegistered"] = [bool]$detail.isSsprRegistered
+            $Record["IsSsprCapable"] = [bool]$detail.isSsprCapable
+            $Record["IsAdmin"] = [bool]$detail.isAdmin
+            $Record["UserType"] = If ($detail.userType) {
+                $detail.userType
+
+            } Else {
+                ""
+
+            }
+
+            $Record["DefaultMfaMethod"] = If ($detail.defaultMfaMethod) {
+                $detail.defaultMfaMethod
+
+            } Else {
+                "none"
+
+            }
+
+            $Record["MethodsRegistered"] = If ($detail.methodsRegistered) {
+                $detail.methodsRegistered -join ", "
+
+            } Else {
+                ""
+
+            }
 
         } Else {
-            ""
-
-        }
-
-        $Record["DefaultMfaMethod"] = If ($detail.defaultMfaMethod) {
-            $detail.defaultMfaMethod
-
-        } Else {
-            "none"
-
-        }
-
-        $Record["MethodsRegistered"] = If ($detail.methodsRegistered) {
-            $detail.methodsRegistered -join ", "
-
-        } Else {
-            ""
+            $Record["IsMfaRegistered"] = $null
+            $Record["IsMfaCapable"] = $null
+            $Record["IsPasswordlessCapable"] = $null
+            $Record["IsSsprRegistered"] = $null
+            $Record["IsSsprCapable"] = $null
+            $Record["IsAdmin"] = $null
+            $Record["UserType"] = ""
+            $Record["DefaultMfaMethod"] = "unknown"
+            $Record["MethodsRegistered"] = ""
 
         }
 
