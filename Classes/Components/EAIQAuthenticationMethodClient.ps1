@@ -25,6 +25,14 @@ class EAIQAuthenticationMethodClient {
 
             }
 
+            # A Temporary Access Pass that has been used up or expired is reported by
+            # Graph with isUsable = false. It is not a currently valid MFA method, so it
+            # is excluded entirely (not counted, not shown).
+            If ($type -eq "#microsoft.graph.temporaryAccessPassAuthenticationMethod" -and $method.isUsable -eq $false) {
+                Continue
+
+            }
+
             $info = [EAIQAuthenticationMethodInfo]::GetInfo($type)
             $instance = $this.BuildInstance($method, $info)
             $method_instances.Add($instance)
@@ -152,11 +160,30 @@ class EAIQAuthenticationMethodClient {
         }
 
         $instance["Detail"] = $this.BuildDetail($Method)
-        $instance["Registered"] = $created
-        $instance["LastUsed"] = $Method.lastUsedDateTime
+        $instance["Registered"] = $this.NormalizeDate($created)
+        $instance["LastUsed"] = $this.NormalizeDate($Method.lastUsedDateTime)
         $instance["PasskeyClass"] = $this.BuildPasskeyClass($Method)
 
         Return [pscustomobject]$instance
+
+    }
+
+    # Graph date values can arrive as [datetime] (Invoke-RestMethod auto-parses them),
+    # which Windows PowerShell 5.1 serializes to "/Date(ms)/" via ConvertTo-Json. Emit a
+    # plain ISO 8601 UTC string instead so the value is portable and the dashboard can parse it.
+    hidden [string]NormalizeDate([object]$Value) {
+        If (!$Value) {
+            Return ""
+
+        }
+
+        $dt = $Value -as [datetime]
+        If ($dt) {
+            Return $dt.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+
+        }
+
+        Return "$Value"
 
     }
 
