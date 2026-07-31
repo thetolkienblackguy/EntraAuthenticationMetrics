@@ -1,8 +1,8 @@
-class EAIQTemplateManager {
+class AuthIQTemplateManager {
     hidden [hashtable]$TemplateCache
     hidden [string]$TemplatePath
 
-    EAIQTemplateManager([string]$TemplatePath) {
+    AuthIQTemplateManager([string]$TemplatePath) {
         $this.TemplatePath = $TemplatePath
         $this.TemplateCache = @{}
 

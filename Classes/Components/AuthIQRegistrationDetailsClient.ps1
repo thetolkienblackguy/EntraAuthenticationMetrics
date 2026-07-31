@@ -1,9 +1,9 @@
-class EAIQRegistrationDetailsClient {
-    [EAIQGraphRequestClient]$Client
+class AuthIQRegistrationDetailsClient {
+    [AuthIQGraphRequestClient]$Client
     [System.Collections.Generic.List[object]]$RegistrationDetails
     [string]$DataAsOf
 
-    EAIQRegistrationDetailsClient([EAIQGraphRequestClient]$Client) {
+    AuthIQRegistrationDetailsClient([AuthIQGraphRequestClient]$Client) {
         $this.Client = $Client
         $this.RegistrationDetails = [System.Collections.Generic.List[object]]::new()
 

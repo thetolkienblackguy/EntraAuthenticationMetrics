@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed (Breaking)
 
-- `New-EAMAuthenticationReport` and `New-EAMDashboard` are removed. They had different behavior and parameters from the `EAIQ` cmdlets, so they are not provided as aliases. Use `Invoke-EAIQDashboardCreation` to build the dashboard; for row-level data use the dashboard's Method Inventory CSV export.
-- The deprecated cmdlets are no longer exported as functions. `Invoke-EAMDashboardCreation` and `Send-EAMMailMessage` are now **aliases** of `Invoke-EAIQDashboardCreation` and `Send-EAIQMailMessage` (identical parameters), so existing calls keep working, but the runtime deprecation warning is gone.
-- `New-EntraAuthenticationMetricsDashboard` now aliases `Invoke-EAIQDashboardCreation` (previously the removed `New-EAMDashboard`); its parameters are those of `Invoke-EAIQDashboardCreation`.
+- `New-EAMAuthenticationReport` and `New-EAMDashboard` are removed. They had different behavior and parameters from the `AuthIQ` cmdlets, so they are not provided as aliases. Use `Invoke-AuthIQDashboardCreation` to build the dashboard; for row-level data use the dashboard's Method Inventory CSV export.
+- The deprecated cmdlets are no longer exported as functions. `Invoke-EAMDashboardCreation` and `Send-EAMMailMessage` are now **aliases** of `Invoke-AuthIQDashboardCreation` and `Send-AuthIQMailMessage` (identical parameters), so existing calls keep working, but the runtime deprecation warning is gone.
+- `New-EntraAuthenticationMetricsDashboard` now aliases `Invoke-AuthIQDashboardCreation` (previously the removed `New-EAMDashboard`); its parameters are those of `Invoke-AuthIQDashboardCreation`.
 
 ### Changed
 
@@ -47,15 +47,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Re-architected the module onto the IQ-family class model (`EAIQ` prefix) to align with ConditionalAccessIQ (CAIQ) and EntraHealthIQ (EHIQ): a Graph request client, template manager, and log manager under `Classes/Helpers`, and user / registration-details / authentication-method / report-builder components under `Classes/Components`. The `Private/Get-EAM*` data functions were folded into these classes.
-- Renamed the primary cmdlets to the `EAIQ` prefix: `Invoke-EAIQDashboardCreation` and `Send-EAIQMailMessage`.
+- Re-architected the module onto the IQ-family class model (`AuthIQ` prefix) to align with ConditionalAccessIQ (CAIQ) and EntraHealthIQ (EHIQ): a Graph request client, template manager, and log manager under `Classes/Helpers`, and user / registration-details / authentication-method / report-builder components under `Classes/Components`. The `Private/Get-EAM*` data functions were folded into these classes.
+- Renamed the primary cmdlets to the `AuthIQ` prefix: `Invoke-AuthIQDashboardCreation` and `Send-AuthIQMailMessage`.
 - Rebuilt the dashboard in the shared IQ interface (app header, tab navigation, clickable summary cards, master-detail split pane) on the common indigo/dark design tokens; the Font Awesome CDN dependency was removed so the report is fully self-contained and offline.
 - Authentication methods are now read from beta (previously v1.0), which is what exposes the per-method registered/last-used timestamps and passkey metadata.
-- `Invoke-EAIQDashboardCreation` writes to an `EntraAuthenticationMetrics` output folder, logs to `Logs\`, and opens the report only when `-OpenReport` is supplied (previously opened by default).
+- `Invoke-AuthIQDashboardCreation` writes to an `EntraAuthenticationMetrics` output folder, logs to `Logs\`, and opens the report only when `-OpenReport` is supplied (previously opened by default).
 
 ### Deprecated
 
-- `Invoke-EAMDashboardCreation`, `Send-EAMMailMessage`, `New-EAMAuthenticationReport`, and `New-EAMDashboard` are retained as thin, warning wrappers over the `EAIQ` cmdlets and will be removed in a future release.
+- `Invoke-EAMDashboardCreation`, `Send-EAMMailMessage`, `New-EAMAuthenticationReport`, and `New-EAMDashboard` are retained as thin, warning wrappers over the `AuthIQ` cmdlets and will be removed in a future release.
 
 ## [0.2.0] - 2025-03-09
 

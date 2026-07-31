@@ -1,10 +1,10 @@
-class EAIQLogManager {
+class AuthIQLogManager {
     [string]$LogFile
     [bool]$WriteOutput
     [bool]$Verbose
     hidden [bool]$IsInteractive = $true
 
-    EAIQLogManager([string]$LogFile, [bool]$WriteOutput, [bool]$Verbose, [bool]$IsInteractive) {
+    AuthIQLogManager([string]$LogFile, [bool]$WriteOutput, [bool]$Verbose, [bool]$IsInteractive) {
         $this.LogFile = $LogFile
         $this.WriteOutput = $WriteOutput
         $this.Verbose = $Verbose

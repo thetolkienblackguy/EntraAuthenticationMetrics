@@ -1,4 +1,4 @@
-class EAIQGraphRequestClient {
+class AuthIQGraphRequestClient {
     [string]$GraphEndpoint
     [ValidateSet("Beta", "v1.0")]
     [string]$ApiVersion = "v1.0"
@@ -6,7 +6,7 @@ class EAIQGraphRequestClient {
 
     #region Constructors
 
-    EAIQGraphRequestClient() {
+    AuthIQGraphRequestClient() {
         $this.RequestParams = @{}
         $this.SetGraphEndpoint()
 

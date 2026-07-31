@@ -1,4 +1,4 @@
-Function Get-EAIQAuthenticationReportData {
+Function Get-AuthIQAuthenticationReportData {
     <#
         .SYNOPSIS
         Gathers the authentication report dataset for Entra ID users.
@@ -34,7 +34,7 @@ Function Get-EAIQAuthenticationReportData {
         System.Management.Automation.PSCustomObject
 
         .EXAMPLE
-        Get-EAIQAuthenticationReportData -AllUsers
+        Get-AuthIQAuthenticationReportData -AllUsers
         Gathers the authentication dataset for every user in the tenant.
 
     #>
@@ -66,14 +66,14 @@ Function Get-EAIQAuthenticationReportData {
         $ErrorActionPreference = "Stop"
         Write-Debug "Initializing authentication report components"
 
-        $client = [EAIQGraphRequestClient]::new()
-        $beta_client = [EAIQGraphRequestClient]::new()
+        $client = [AuthIQGraphRequestClient]::new()
+        $beta_client = [AuthIQGraphRequestClient]::new()
         $beta_client.ApiVersion = "Beta"
 
-        $user_client = [EAIQUserClient]::new($client)
-        $registration_client = [EAIQRegistrationDetailsClient]::new($beta_client)
+        $user_client = [AuthIQUserClient]::new($client)
+        $registration_client = [AuthIQRegistrationDetailsClient]::new($beta_client)
         # Methods are read from beta so each instance carries createdDateTime, lastUsedDateTime, passkeyType, etc.
-        $method_client = [EAIQAuthenticationMethodClient]::new($beta_client)
+        $method_client = [AuthIQAuthenticationMethodClient]::new($beta_client)
 
     } Process {
         Write-Debug "Gathering users with parameter set: $($PSCmdlet.ParameterSetName)"

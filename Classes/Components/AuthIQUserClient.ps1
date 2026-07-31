@@ -1,9 +1,9 @@
-class EAIQUserClient {
-    [EAIQGraphRequestClient]$Client
+class AuthIQUserClient {
+    [AuthIQGraphRequestClient]$Client
     [System.Collections.Generic.List[object]]$Users
     hidden [string]$UserSelect = "id,userPrincipalName,mail,companyName,department,accountEnabled,authorizationInfo"
 
-    EAIQUserClient([EAIQGraphRequestClient]$Client) {
+    AuthIQUserClient([AuthIQGraphRequestClient]$Client) {
         $this.Client = $Client
         $this.Users = [System.Collections.Generic.List[object]]::new()
 
@@ -80,7 +80,7 @@ class EAIQUserClient {
     #region Internal Methods
 
     hidden [void]GetUserById([string]$UserId) {
-        $filter = If ([EAIQGraphRequestClient]::IsGuid($UserId)) {
+        $filter = If ([AuthIQGraphRequestClient]::IsGuid($UserId)) {
             "id eq '$UserId'"
 
         } Else {

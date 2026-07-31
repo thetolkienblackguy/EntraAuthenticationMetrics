@@ -24,13 +24,17 @@ ForEach ($import in $imports) {
 
 }
 
-# Backward-compatibility aliases for the former EAM-prefixed cmdlets. The old
-# names now resolve to the EAIQ cmdlets. New-EAMAuthenticationReport and
-# New-EAMDashboard had different behavior and were removed (see CHANGELOG).
-Set-Alias -Name "Invoke-EAMDashboardCreation" -Value "Invoke-EAIQDashboardCreation"
-Set-Alias -Name "Send-EAMMailMessage" -Value "Send-EAIQMailMessage"
-Set-Alias -Name "New-EntraAuthenticationMetricsDashboard" -Value "Invoke-EAIQDashboardCreation"
+# Backward-compatibility aliases. The canonical cmdlets are now AuthIQ-prefixed;
+# the former EAIQ- and EAM-prefixed names resolve to them. New-EAMAuthenticationReport
+# and New-EAMDashboard had different behavior and were removed (see CHANGELOG).
+Set-Alias -Name "Invoke-EAIQDashboardCreation" -Value "Invoke-AuthIQDashboardCreation"
+Set-Alias -Name "Send-EAIQMailMessage" -Value "Send-AuthIQMailMessage"
+Set-Alias -Name "Invoke-EAMDashboardCreation" -Value "Invoke-AuthIQDashboardCreation"
+Set-Alias -Name "Send-EAMMailMessage" -Value "Send-AuthIQMailMessage"
+Set-Alias -Name "New-EntraAuthenticationMetricsDashboard" -Value "Invoke-AuthIQDashboardCreation"
 Export-ModuleMember -Alias @(
+    "Invoke-EAIQDashboardCreation",
+    "Send-EAIQMailMessage",
     "Invoke-EAMDashboardCreation",
     "Send-EAMMailMessage",
     "New-EntraAuthenticationMetricsDashboard"

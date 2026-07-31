@@ -1,4 +1,4 @@
-Function Send-EAIQMailMessage {
+Function Send-AuthIQMailMessage {
     <#
         .DESCRIPTION
         This function sends an email message using the Microsoft Graph API.
@@ -34,10 +34,10 @@ Function Send-EAIQMailMessage {
         Specifies whether to save the email message to the sent items folder.
 
         .EXAMPLE
-        Send-EAIQMailMessage -To "john.doe@contoso.com" -From "jane.doe@contoso.com" -Subject "Test" -Body "This is a test"
+        Send-AuthIQMailMessage -To "john.doe@contoso.com" -From "jane.doe@contoso.com" -Subject "Test" -Body "This is a test"
 
         .EXAMPLE
-        Send-EAIQMailMessage -To "john.doe@contoso.com" -From "jane.doe@contoso.com" -Subject "Test" -Body "This is a test" -Attachments "C:\Temp\test.txt"
+        Send-AuthIQMailMessage -To "john.doe@contoso.com" -From "jane.doe@contoso.com" -Subject "Test" -Body "This is a test" -Attachments "C:\Temp\test.txt"
 
             .INPUTS
         .INPUTS
@@ -78,7 +78,7 @@ Function Send-EAIQMailMessage {
     )
     Begin {
         # Microsoft Graph request client (resolves the endpoint from the current context)
-        $client = [EAIQGraphRequestClient]::new()
+        $client = [AuthIQGraphRequestClient]::new()
 
         # Creating parent message hash table
         $mail_message = @{}
@@ -104,14 +104,14 @@ Function Send-EAIQMailMessage {
             foreach ($recipient_type in $recipient_table.Keys) {
                 If ($PSBoundParameters.ContainsKey($recipient_type)) {
                     # Setting recipients
-                    $message[$recipient_table[$recipient_type]] = @(Set-EAIQRecipientArray -Recipients $PSBoundParameters[$recipient_type])
+                    $message[$recipient_table[$recipient_type]] = @(Set-AuthIQRecipientArray -Recipients $PSBoundParameters[$recipient_type])
                 
                 }
             }
 
             # Setting attachments
             If ($PSBoundParameters.ContainsKey("Attachments")) {
-                $message["attachments"] = @(Set-EAIQAttachmentArray -Attachments $attachments)
+                $message["attachments"] = @(Set-AuthIQAttachmentArray -Attachments $attachments)
 
             }
         } Catch {

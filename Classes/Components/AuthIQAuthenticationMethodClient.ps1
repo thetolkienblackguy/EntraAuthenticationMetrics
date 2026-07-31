@@ -1,8 +1,8 @@
-class EAIQAuthenticationMethodClient {
-    [EAIQGraphRequestClient]$Client
+class AuthIQAuthenticationMethodClient {
+    [AuthIQGraphRequestClient]$Client
     [System.Collections.Generic.List[pscustomobject]]$Report
 
-    EAIQAuthenticationMethodClient([EAIQGraphRequestClient]$Client) {
+    AuthIQAuthenticationMethodClient([AuthIQGraphRequestClient]$Client) {
         $this.Client = $Client
         $this.Report = [System.Collections.Generic.List[pscustomobject]]::new()
 
@@ -20,7 +20,7 @@ class EAIQAuthenticationMethodClient {
         ForEach ($method in $raw_methods) {
             $type = $method."@odata.type"
 
-            If ([EAIQAuthenticationMethodInfo]::IsPassword($type)) {
+            If ([AuthIQAuthenticationMethodInfo]::IsPassword($type)) {
                 Continue
 
             }
@@ -33,7 +33,7 @@ class EAIQAuthenticationMethodClient {
 
             }
 
-            $info = [EAIQAuthenticationMethodInfo]::GetInfo($type)
+            $info = [AuthIQAuthenticationMethodInfo]::GetInfo($type)
             $instance = $this.BuildInstance($method, $info)
             $method_instances.Add($instance)
 
@@ -190,7 +190,7 @@ class EAIQAuthenticationMethodClient {
     # Classify a passkey by type. Only FIDO2 credentials are passkeys; Windows Hello for
     # Business and Platform SSO are distinct credential types and are not passkeys.
     hidden [string]BuildPasskeyClass([object]$Method) {
-        Return [EAIQAuthenticationMethodInfo]::ClassifyPasskey($Method)
+        Return [AuthIQAuthenticationMethodInfo]::ClassifyPasskey($Method)
 
     }
 

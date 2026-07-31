@@ -51,16 +51,16 @@ The deprecated `EAM`-prefixed cmdlets are no longer exported as functions. Two a
 
 | Old cmdlet | Status in 0.4.0 | Use instead |
 | --- | --- | --- |
-| `Invoke-EAMDashboardCreation` | **Alias** of `Invoke-EAIQDashboardCreation` (identical parameters) | `Invoke-EAIQDashboardCreation` |
-| `Send-EAMMailMessage` | **Alias** of `Send-EAIQMailMessage` (identical parameters) | `Send-EAIQMailMessage` |
-| `New-EAMAuthenticationReport` | **Removed** (different behavior, not alias-able) | `Invoke-EAIQDashboardCreation`; Method Inventory CSV export for row data |
-| `New-EAMDashboard` | **Removed** (different parameters, not alias-able) | `Invoke-EAIQDashboardCreation -InputObject $data` |
-| `New-EntraAuthenticationMetricsDashboard` | Alias **repointed** to `Invoke-EAIQDashboardCreation` | `Invoke-EAIQDashboardCreation` |
+| `Invoke-EAMDashboardCreation` | **Alias** of `Invoke-AuthIQDashboardCreation` (identical parameters) | `Invoke-AuthIQDashboardCreation` |
+| `Send-EAMMailMessage` | **Alias** of `Send-AuthIQMailMessage` (identical parameters) | `Send-AuthIQMailMessage` |
+| `New-EAMAuthenticationReport` | **Removed** (different behavior, not alias-able) | `Invoke-AuthIQDashboardCreation`; Method Inventory CSV export for row data |
+| `New-EAMDashboard` | **Removed** (different parameters, not alias-able) | `Invoke-AuthIQDashboardCreation -InputObject $data` |
+| `New-EntraAuthenticationMetricsDashboard` | Alias **repointed** to `Invoke-AuthIQDashboardCreation` | `Invoke-AuthIQDashboardCreation` |
 
 Notes:
 
-- The two aliases keep existing scripts working, but the previous runtime deprecation warning is gone. Move to the `EAIQ` names.
-- `New-EAMDashboard` accepted `-DataSet` / `-Outfile` / `-InvokeDashboard`. The equivalent is `Invoke-EAIQDashboardCreation -InputObject <rows> -FileName <name> -OpenReport`.
+- The two aliases keep existing scripts working, but the previous runtime deprecation warning is gone. Move to the `AuthIQ` names.
+- `New-EAMDashboard` accepted `-DataSet` / `-Outfile` / `-InvokeDashboard`. The equivalent is `Invoke-AuthIQDashboardCreation -InputObject <rows> -FileName <name> -OpenReport`.
 
 ### Other changes in 0.4.0
 
@@ -188,13 +188,13 @@ Connect-MgGraph -ClientId $client_id -CertificateThumbprint "cert-thumbprint" -T
 
 ```powershell
 # Generate dashboard for all users (saved under .\EntraAuthenticationMetrics)
-Invoke-EAIQDashboardCreation -AllUsers
+Invoke-AuthIQDashboardCreation -AllUsers
 
 # Generate dashboard and open it in the browser
-Invoke-EAIQDashboardCreation -AllUsers -OpenReport
+Invoke-AuthIQDashboardCreation -AllUsers -OpenReport
 
 # Generate dashboard and suppress certificate warning
-Invoke-EAIQDashboardCreation -AllUsers -IgnoreCertificateWarning
+Invoke-AuthIQDashboardCreation -AllUsers -IgnoreCertificateWarning
 ```
 
 #### Security Group Based Dashboard
@@ -202,7 +202,7 @@ Invoke-EAIQDashboardCreation -AllUsers -IgnoreCertificateWarning
 ```powershell
 # Create dashboard for specific group
 $group_id = "12345678-1234-1234-1234-123456789012"
-Invoke-EAIQDashboardCreation -GroupId $group_id
+Invoke-AuthIQDashboardCreation -GroupId $group_id
 
 ```
 
@@ -213,11 +213,11 @@ Invoke-EAIQDashboardCreation -GroupId $group_id
 
 # Users with specific domain
 $domain_filter = "endsWith(userPrincipalName,'@contoso.com')"
-Invoke-EAIQDashboardCreation -Filter $domain_filter
+Invoke-AuthIQDashboardCreation -Filter $domain_filter
 
 # Users with specific display name pattern
 $name_filter = "startsWith(displayName,'A')"
-Invoke-EAIQDashboardCreation -Filter $name_filter
+Invoke-AuthIQDashboardCreation -Filter $name_filter
 ```
 
 #### CSV Import Dashboard
@@ -230,16 +230,16 @@ Invoke-EAIQDashboardCreation -Filter $name_filter
 # user2@contoso.com
 
 # Generate dashboard from CSV
-Invoke-EAIQDashboardCreation -ImportCsv -Path ".\users.csv" -IdentityHeader "UserPrincipalName"
+Invoke-AuthIQDashboardCreation -ImportCsv -Path ".\users.csv" -IdentityHeader "UserPrincipalName"
 ```
 
 ### Email Dashboard
 
 ```powershell
-# Generate and email dashboard (Invoke-EAIQDashboardCreation returns the report path)
-$dashboard_path = Invoke-EAIQDashboardCreation -AllUsers
+# Generate and email dashboard (Invoke-AuthIQDashboardCreation returns the report path)
+$dashboard_path = Invoke-AuthIQDashboardCreation -AllUsers
 
-Send-EAIQMailMessage -To "security-team@contoso.com" -From "reports@contoso.com" -Subject "Authentication Methods Dashboard" -Body "Please find attached the latest authentication methods dashboard." -Attachments $dashboard_path
+Send-AuthIQMailMessage -To "security-team@contoso.com" -From "reports@contoso.com" -Subject "Authentication Methods Dashboard" -Body "Please find attached the latest authentication methods dashboard." -Attachments $dashboard_path
 ```
 
 ### Report Data Export
@@ -250,7 +250,7 @@ Three CSV exports are available from the dashboard header:
 - **Export Users Without MFA** - one row per user with no registered MFA method at all, with email, company, department, default MFA method, and whether registration-report data was available. Highest-priority registration targets.
 - **Export Users Without PRMFA** - one row per user who has MFA but no phishing-resistant method, with email, company, department, default MFA method, and method count. The PRMFA upgrade targets. Together with the no-MFA list this covers everyone lacking phishing-resistant MFA.
 
-> The standalone `New-EAMAuthenticationReport` cmdlet was removed in 0.4.0. If you need the report rows in a variable for scripting, capture the report path from `Invoke-EAIQDashboardCreation` and use the dashboard CSV export, or open an issue if a dedicated data cmdlet would help your workflow.
+> The standalone `New-EAMAuthenticationReport` cmdlet was removed in 0.4.0. If you need the report rows in a variable for scripting, capture the report path from `Invoke-AuthIQDashboardCreation` and use the dashboard CSV export, or open an issue if a dedicated data cmdlet would help your workflow.
 
 ## Dashboard Features
 

@@ -1,4 +1,4 @@
-class EAIQAuthenticationMethodInfo {
+class AuthIQAuthenticationMethodInfo {
     # Graph authentication method type -> friendly category and strength classification.
     # Strength drives the PRMFA (phishing-resistant) roll-up: "strong" methods count toward PRMFA.
     static [System.Collections.IDictionary] $method_table = @{
@@ -55,12 +55,12 @@ class EAIQAuthenticationMethodInfo {
 
         $aaguid = "$($Method.aaGuid)".ToLower()
 
-        If ($aaguid -in [EAIQAuthenticationMethodInfo]::microsoft_authenticator_aaguids) {
+        If ($aaguid -in [AuthIQAuthenticationMethodInfo]::microsoft_authenticator_aaguids) {
             Return "Authenticator passkey"
 
         }
 
-        If ($aaguid -in [EAIQAuthenticationMethodInfo]::windows_hello_aaguids) {
+        If ($aaguid -in [AuthIQAuthenticationMethodInfo]::windows_hello_aaguids) {
             Return "Windows Hello passkey"
 
         }
@@ -83,8 +83,8 @@ class EAIQAuthenticationMethodInfo {
 
     # Return the friendly category and strength for a method type, deriving a label for unknown types
     static [pscustomobject] GetInfo([string]$Type) {
-        If ([EAIQAuthenticationMethodInfo]::method_table.Contains($Type)) {
-            $entry = [EAIQAuthenticationMethodInfo]::method_table[$Type]
+        If ([AuthIQAuthenticationMethodInfo]::method_table.Contains($Type)) {
+            $entry = [AuthIQAuthenticationMethodInfo]::method_table[$Type]
             $info = [ordered]@{}
             $info["Name"] = $entry.Name
             $info["Strength"] = $entry.Strength

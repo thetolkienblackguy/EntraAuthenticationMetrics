@@ -1,4 +1,4 @@
-Function Write-EAIQCertificateWarning {
+Function Write-AuthIQCertificateWarning {
     <#
         .SYNOPSIS
         Writes a warning about the certificate based authentication.

@@ -1,4 +1,4 @@
-Function Invoke-EAIQDashboardCreation {
+Function Invoke-AuthIQDashboardCreation {
     <#
         .SYNOPSIS
         Generates an interactive Entra ID authentication metrics dashboard.
@@ -51,27 +51,31 @@ Function Invoke-EAIQDashboardCreation {
         .PARAMETER IgnoreCertificateWarning
         Suppress the certificate-based authentication warning.
 
+        .PARAMETER EmailRiskScope
+        Which at-risk users the email body lists: NoMfa (no registered MFA), Weak (registered but
+        not phishing-resistant), or Both. Defaults to Both. Does not affect the attached dashboard.
+
         .INPUTS
         System.Object[]
 
         .OUTPUTS
-        System.String
+        PSCustomObject with HtmlPath, EmailHtml (inline-styled body), and Title.
 
         .EXAMPLE
-        Invoke-EAIQDashboardCreation -AllUsers -OpenReport
+        Invoke-AuthIQDashboardCreation -AllUsers -OpenReport
         Generates the dashboard for every user and opens it.
 
         .EXAMPLE
-        Invoke-EAIQDashboardCreation -GroupId "12345678-1234-1234-1234-123456789012"
+        Invoke-AuthIQDashboardCreation -GroupId "12345678-1234-1234-1234-123456789012"
         Generates the dashboard for the transitive members of a group.
 
         .EXAMPLE
-        $report = Get-EAIQAuthenticationReportData -AllUsers
-        Invoke-EAIQDashboardCreation -InputObject $report.Report
+        $report = Get-AuthIQAuthenticationReportData -AllUsers
+        Invoke-AuthIQDashboardCreation -InputObject $report.Report
 
     #>
     [CmdletBinding(DefaultParameterSetName="AllUsers")]
-    [OutputType([System.String])]
+    [OutputType([System.Management.Automation.PSCustomObject])]
     param(
         [Parameter(Mandatory=$false, ParameterSetName="AllUsers")]
         [switch]$AllUsers,
@@ -104,7 +108,10 @@ Function Invoke-EAIQDashboardCreation {
         [Parameter(Mandatory=$false)]
         [switch]$OpenReport,
         [Parameter(Mandatory=$false)]
-        [switch]$IgnoreCertificateWarning
+        [switch]$IgnoreCertificateWarning,
+        [Parameter(Mandatory=$false)]
+        [ValidateSet("NoMfa", "Weak", "Both")]
+        [string]$EmailRiskScope = "Both"
 
     )
     Begin {
@@ -112,11 +119,11 @@ Function Invoke-EAIQDashboardCreation {
         Write-Debug "Initializing dashboard creation"
 
         $template_path = Join-Path -Path $PSScriptRoot -ChildPath "..\Templates"
-        $report_builder = [EAIQReportBuilder]::new($template_path, $outputPath)
+        $report_builder = [AuthIQReportBuilder]::new($template_path, $outputPath)
 
-        $log_path = Join-Path -Path $outputPath -ChildPath "Logs\Invoke-EAIQDashboardCreation_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').log"
+        $log_path = Join-Path -Path $outputPath -ChildPath "Logs\Invoke-AuthIQDashboardCreation_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').log"
         $is_interactive = ($host.Name -ne "Default Host")
-        $log_manager = [EAIQLogManager]::new($log_path, $true, $true, $is_interactive)
+        $log_manager = [AuthIQLogManager]::new($log_path, $true, $true, $is_interactive)
 
         $report_rows = $null
         $data_as_of = "Not available"
@@ -152,7 +159,7 @@ Function Invoke-EAIQDashboardCreation {
                 }
 
                 $log_manager.Information("Gathering authentication data ($($PSCmdlet.ParameterSetName))")
-                $data = Get-EAIQAuthenticationReportData @data_params
+                $data = Get-AuthIQAuthenticationReportData @data_params
                 $report_rows = $data.Report
                 $data_as_of = $data.DataAsOf
                 $tenant_name = $data.TenantName
@@ -179,6 +186,9 @@ Function Invoke-EAIQDashboardCreation {
             $report_path = $report_builder.ExportReport($report_html, $null, $fileName)
             $log_manager.Success("Report created at: $report_path")
 
+            # Build the inline-styled email body in memory for mail delivery
+            $email_html = $report_builder.BuildAuthenticationEmailReport($report_rows, $title, $tenant_name, $data_as_of, $emailRiskScope)
+
             If ($openReport) {
                 $ii_params = @{}
                 $ii_params["Path"] = $report_path
@@ -187,12 +197,17 @@ Function Invoke-EAIQDashboardCreation {
             }
 
             If (!$ignoreCertificateWarning) {
-                Write-EAIQCertificateWarning
+                Write-AuthIQCertificateWarning
 
             }
 
             $log_manager.Finalize("Authentication dashboard creation complete")
-            $report_path
+
+            $result = @{}
+            $result["HtmlPath"] = $report_path
+            $result["EmailHtml"] = $email_html
+            $result["Title"] = $title
+            [PSCustomObject]$result
 
         } Catch {
             $log_manager.Error("Failed to create dashboard: $($_.Exception.Message)")

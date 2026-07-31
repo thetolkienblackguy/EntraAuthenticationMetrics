@@ -1,4 +1,4 @@
-Function Set-EAIQAttachmentArray {
+Function Set-AuthIQAttachmentArray {
     <#
         .SYNOPSIS
         This is a helper function to create an attachment array for the Send-GraphMailMessage function.
