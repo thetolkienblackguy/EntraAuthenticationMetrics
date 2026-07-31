@@ -52,8 +52,10 @@ Function Invoke-AuthIQDashboardCreation {
         Suppress the certificate-based authentication warning.
 
         .PARAMETER EmailRiskScope
-        Which at-risk users the email body lists: NoMfa (no registered MFA), Weak (registered but
-        not phishing-resistant), or Both. Defaults to Both. Does not affect the attached dashboard.
+        Which MFA gap the email body lists, by the dashboard's method-strength posture: NoMfa (no
+        registered MFA), Weak (only weak-strength methods - phone or email, the dashboard's Legacy
+        group), or Both. Defaults to Both. Standard (Authenticator or OATH) and PRMFA users are not
+        listed. Does not affect the attached dashboard.
 
         .INPUTS
         System.Object[]

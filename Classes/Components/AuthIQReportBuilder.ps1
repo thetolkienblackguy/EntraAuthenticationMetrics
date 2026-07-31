@@ -44,9 +44,14 @@ class AuthIQReportBuilder {
 
     }
 
-    # Inline-styled email body: adoption stat cards plus the at-risk users. RiskScope selects which
-    # at-risk users to list - "NoMfa" (no registered MFA), "Weak" (registered but not phishing
-    # resistant), or "Both". The cards always show the full breakdown regardless of scope.
+    # Inline-styled email body: adoption stat cards plus the MFA gap users. Posture per user is the
+    # dashboard's method-strength classification (auth_dashboard_script.js / method Strength field):
+    #   Prmfa    -> holds a phishing-resistant (strong) method (PRMFA enabled)
+    #   Standard -> best method is standard strength (Microsoft Authenticator, OATH, TAP)
+    #   Weak     -> only weak-strength methods (Phone / Email - the dashboard's "Legacy" group)
+    #   NoMfa    -> no registered MFA
+    # RiskScope selects which gap the table lists: "NoMfa", "Weak", or "Both". Standard and Prmfa
+    # users are never listed. The cards always show the full breakdown regardless of scope.
     [string]BuildAuthenticationEmailReport([object[]]$ReportData, [string]$Title, [string]$TenantName, [string]$DataAsOf, [string]$RiskScope) {
         $renderer = [AuthIQEmailReportRenderer]::new($this.AuthIQTemplateManager)
 
@@ -56,29 +61,33 @@ class AuthIQReportBuilder {
         $include_no = ($RiskScope -eq "NoMfa") -or ($RiskScope -eq "Both")
         $include_weak = ($RiskScope -eq "Weak") -or ($RiskScope -eq "Both")
 
-        $strong_count = 0
+        $prmfa_count = 0
+        $standard_count = 0
         $weak_count = 0
-        $no_count = 0
-        $at_risk = [System.Collections.Generic.List[object]]::new()
+        $nomfa_count = 0
+        $gap = [System.Collections.Generic.List[object]]::new()
 
         ForEach ($row in $rows) {
-            $category = $this.MfaRiskCategory($row)
+            $posture = $this.MfaPosture($row)
 
-            If ($category -eq "NoMfa") {
-                $no_count++
+            If ($posture -eq "NoMfa") {
+                $nomfa_count++
 
-            } ElseIf ($category -eq "Weak") {
+            } ElseIf ($posture -eq "Weak") {
                 $weak_count++
 
+            } ElseIf ($posture -eq "Standard") {
+                $standard_count++
+
             } Else {
-                $strong_count++
+                $prmfa_count++
 
             }
 
-            $in_scope = (($category -eq "NoMfa") -and $include_no) -or (($category -eq "Weak") -and $include_weak)
+            $in_scope = (($posture -eq "NoMfa") -and $include_no) -or (($posture -eq "Weak") -and $include_weak)
 
             If ($in_scope) {
-                $at_risk.Add([pscustomobject]@{ Row = $row; Category = $category })
+                $gap.Add([pscustomobject]@{ Row = $row; Posture = $posture })
 
             }
 
@@ -86,10 +95,10 @@ class AuthIQReportBuilder {
 
         $cards = @(
             @{ count = $total; label = "Users"; color = "#6366f1" },
-            @{ count = ($strong_count + $weak_count); label = "MFA Registered"; color = "#22c55e" },
-            @{ count = $strong_count; label = "Phishing-Resistant"; color = "#312e81" },
-            @{ count = $weak_count; label = "Weak MFA"; color = "#f59e0b" },
-            @{ count = $no_count; label = "No MFA"; color = "#dc2626" }
+            @{ count = $prmfa_count; label = "PRMFA Enabled"; color = "#059669" },
+            @{ count = $standard_count; label = "Standard"; color = "#4f46e5" },
+            @{ count = $weak_count; label = "Weak (Legacy)"; color = "#dc2626" },
+            @{ count = $nomfa_count; label = "No MFA"; color = "#7f1d1d" }
 
         )
 
@@ -102,31 +111,31 @@ class AuthIQReportBuilder {
 
         )
 
-        $risk_rows = [System.Collections.Generic.List[object]]::new()
+        $gap_rows = [System.Collections.Generic.List[object]]::new()
 
-        ForEach ($item in ($at_risk | Sort-Object -Property @{Expression={$_.Category}}, @{Expression={$_.Row.User}})) {
+        ForEach ($item in ($gap | Sort-Object -Property @{Expression={$_.Posture}}, @{Expression={$_.Row.User}})) {
             $row = $item.Row
             $cells = @(
-                $this.MfaRiskPill($item.Category, $renderer),
+                $this.MfaPosturePill($item.Posture, $renderer),
                 $renderer.Encode($row.User),
                 $renderer.Encode($row.Email),
                 $renderer.Encode($row.Department),
                 $renderer.Encode($row.DefaultMfaMethod)
             )
 
-            $risk_rows.Add(@{ cells = $cells; style = $this.MfaRiskRowStyle($item.Category) })
+            $gap_rows.Add(@{ cells = $cells; style = "" })
 
         }
 
         $sections = @(
-            @{ heading = $this.RiskHeading($RiskScope, $risk_rows.Count); columns = $columns; rows = $risk_rows.ToArray(); empty = $this.RiskEmptyMessage($RiskScope) }
+            @{ heading = $this.GapHeading($RiskScope, $gap_rows.Count); columns = $columns; rows = $gap_rows.ToArray(); empty = $this.GapEmptyMessage($RiskScope) }
 
         )
 
         $report = @{}
         $report["title"] = $Title
         $report["tenant"] = $TenantName
-        $report["intro"] = "Authentication method adoption across $total user(s): $strong_count phishing-resistant, $weak_count weak MFA only, $no_count with no registered MFA. The at-risk users below are the immediate gap. The full interactive dashboard is attached."
+        $report["intro"] = "Authentication method adoption across $total user(s): $prmfa_count phishing-resistant (PRMFA), $standard_count standard (Authenticator or OATH), $weak_count weak (phone or email only), $nomfa_count with no registered MFA. The gap users below are the action list. The full interactive dashboard is attached."
         $report["cards"] = $cards
         $report["sections"] = $sections
         $report["footer"] = "Registration data as of $DataAsOf. Open the attached dashboard for per-user detail, search, and CSV export."
@@ -135,68 +144,86 @@ class AuthIQReportBuilder {
 
     }
 
-    hidden [string]MfaRiskCategory([object]$Row) {
+    # Posture from the dashboard's per-method Strength (strong / standard / weak). Strong maps to
+    # PRMFA. A "standard" method (Authenticator, OATH, TAP) means the user is not weak. Weak is only
+    # when every registered method is weak strength (Phone / Email - the dashboard's Legacy group).
+    hidden [string]MfaPosture([object]$Row) {
         If ($Row.MfaStatus -ne "Registered") {
             Return "NoMfa"
 
         }
 
-        If ($Row.PrmfaStatus -ne "Registered") {
-            Return "Weak"
+        If ($Row.PrmfaStatus -eq "Registered") {
+            Return "Prmfa"
 
         }
 
-        Return "Strong"
+        $strengths = @($Row.Methods | ForEach-Object { $_.Strength })
 
-    }
-
-    hidden [string]MfaRiskPill([string]$Category, [object]$Renderer) {
-        If ($Category -eq "NoMfa") {
-            Return $Renderer.Pill("No MFA", "#fee2e2", "#991b1b")
+        If ($strengths -contains "standard") {
+            Return "Standard"
 
         }
 
-        Return $Renderer.Pill("Weak", "#fef3c7", "#92400e")
-
-    }
-
-    hidden [string]MfaRiskRowStyle([string]$Category) {
-        If ($Category -eq "NoMfa") {
-            Return "background-color:#fef2f2;color:#991b1b;"
+        # Registered per the report but with no enumerable methods to classify - do not assume weak.
+        If (@($Row.Methods).Count -eq 0) {
+            Return "Standard"
 
         }
 
-        Return "background-color:#fffbeb;color:#92400e;"
+        Return "Weak"
 
     }
 
-    hidden [string]RiskHeading([string]$RiskScope, [int]$Count) {
+    # Status pill using the dashboard's strength colors: Weak (Legacy) red, No MFA deeper red. Only
+    # Weak and NoMfa reach the gap table; Standard and Prmfa are included for completeness.
+    hidden [string]MfaPosturePill([string]$Posture, [object]$Renderer) {
+        If ($Posture -eq "NoMfa") {
+            Return $Renderer.Pill("No MFA", "#fecaca", "#7f1d1d")
+
+        }
+
+        If ($Posture -eq "Standard") {
+            Return $Renderer.Pill("Standard", "#e0e7ff", "#4f46e5")
+
+        }
+
+        If ($Posture -eq "Prmfa") {
+            Return $Renderer.Pill("PRMFA", "#d1fae5", "#059669")
+
+        }
+
+        Return $Renderer.Pill("Weak", "#fee2e2", "#dc2626")
+
+    }
+
+    hidden [string]GapHeading([string]$RiskScope, [int]$Count) {
         If ($RiskScope -eq "NoMfa") {
             Return "Users Without Registered MFA ($Count)"
 
         }
 
         If ($RiskScope -eq "Weak") {
-            Return "Users With Weak MFA Only ($Count)"
+            Return "Users With Weak (Legacy) MFA Only ($Count)"
 
         }
 
-        Return "At-Risk Users ($Count)"
+        Return "MFA Gap Users ($Count)"
 
     }
 
-    hidden [string]RiskEmptyMessage([string]$RiskScope) {
+    hidden [string]GapEmptyMessage([string]$RiskScope) {
         If ($RiskScope -eq "NoMfa") {
             Return "Every user in this dataset has a registered MFA method."
 
         }
 
         If ($RiskScope -eq "Weak") {
-            Return "No users are limited to weak MFA methods."
+            Return "No users are limited to weak (Legacy) methods."
 
         }
 
-        Return "No at-risk users: every user has a phishing-resistant MFA method."
+        Return "No gaps: every user has at least standard MFA."
 
     }
 
