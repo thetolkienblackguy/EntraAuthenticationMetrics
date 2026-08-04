@@ -82,7 +82,7 @@ Notes:
 
 - 📊 **Interactive Dashboard**
   - Master-detail view: per-user cards for every registered method
-  - Per-method **registered** and **last-used** dates (with relative age; stale methods highlighted)
+  - Per-method **registered** date (with relative age; stale methods highlighted)
   - Passkey detail (type + model), Windows Hello key strength, TAP usability, QR Code + PIN
   - User email shown alongside the UPN (when it differs), plus company and department in the detail; all searchable
   - Real-time filtering, search, and sorting
@@ -246,7 +246,7 @@ Send-AuthIQMailMessage -To "security-team@contoso.com" -From "reports@contoso.co
 
 Three CSV exports are available from the dashboard header:
 
-- **Export Method Inventory CSV** - one row per user / method instance, including user email, company, department, `MfaStatus`, `PrmfaStatus`, method category, strength, and registered / last-used dates.
+- **Export Method Inventory CSV** - one row per user / method instance, including user email, company, department, `MfaStatus`, `PrmfaStatus`, method category, strength, and registered date.
 - **Export Users Without MFA** - one row per user with no registered MFA method at all, with email, company, department, default MFA method, and whether registration-report data was available. Highest-priority registration targets.
 - **Export Users Without PRMFA** - one row per user who has MFA but no phishing-resistant method, with email, company, department, default MFA method, and method count. The PRMFA upgrade targets. Together with the no-MFA list this covers everyone lacking phishing-resistant MFA.
 
@@ -275,7 +275,7 @@ The interactive HTML dashboard provides:
 3. **Beta Graph Endpoints**
    - Per-method registered/last-used dates and passkey metadata come from the beta `/authentication/methods` endpoint (requires `UserAuthenticationMethod.Read.All`)
    - Registration capability chips come from the beta `reports/authenticationMethods/userRegistrationDetails` report (requires `AuditLog.Read.All`); its "Registration data as of" timestamp reflects when Entra last refreshed the report
-   - `lastUsedDateTime` is populated by Entra and may be `null` (shown as "Never") for methods that have not been used or where usage is not yet recorded
+   - Per-method **last-used** is not shown: the `fido2AuthenticationMethod` resource has no `lastUsedDateTime` property, and for types that do (for example Windows Hello for Business) Entra usually leaves it `null`, so the value was unreliable and was removed. Registered (`createdDateTime`) is reliable and is shown
    - Beta Graph endpoints are subject to change
 
 4. **Disabled Users and Registration Report Coverage**

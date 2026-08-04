@@ -245,7 +245,6 @@ function methodCard(m) {
         ${meta}
         <div class="method-dates">
             ${dateCol("Registered", m.Registered, "&mdash;")}
-            ${dateCol("Last used", m.LastUsed, "Never")}
         </div>
     </div>`;
 }
@@ -441,9 +440,9 @@ function downloadCsv(filename, rows) {
 }
 
 function exportInventory() {
-    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "Category", "Strength", "Name", "Model", "Detail", "Registered", "LastUsed"]];
+    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "Category", "Strength", "Name", "Model", "Detail", "Registered"]];
     users.forEach(u => userMethods(u).forEach(m => {
-        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", u.MfaStatus, u.PrmfaStatus, m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || "", m.LastUsed || ""]);
+        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", u.MfaStatus, u.PrmfaStatus, m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || ""]);
     }));
     downloadCsv(`entra_auth_method_inventory_${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }

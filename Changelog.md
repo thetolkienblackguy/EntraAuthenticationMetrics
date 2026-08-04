@@ -29,8 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `MFA Registered` (summary and statistics) is now derived so `PRMFA Enabled` is always a subset: a user counts as MFA registered if they hold any registered method or Entra's report says so. This corrects counts where PRMFA Enabled exceeded MFA Registered (for example, users present in the live method data but absent from the registration report).
 - Users absent from the `userRegistrationDetails` report (for example, disabled users, which Entra excludes) now show registration capability as `Unknown` instead of a misleading not-registered (`false`) state. "No data" is no longer collapsed into "not registered."
-- Per-method registered and last-used dates now serialize as ISO 8601 strings. Windows PowerShell 5.1 serialized the underlying `[datetime]` values as `/Date(ms)/`, which the dashboard could not parse (blank dates) and which leaked into the CSV export.
+- Per-method registered dates now serialize as ISO 8601 strings. Windows PowerShell 5.1 serialized the underlying `[datetime]` values as `/Date(ms)/`, which the dashboard could not parse (blank dates) and which leaked into the CSV export.
 - Temporary Access Passes that have been used or have expired (`isUsable = false`) are excluded entirely: they no longer count toward MFA registration or appear as a method. Only a currently usable TAP is counted and shown.
+- Removed the per-method last-used column from the dashboard and CSV. Graph does not expose `lastUsedDateTime` for FIDO2 methods and usually leaves it `null` for others, so the value was unreliable and misleading. Only the registered date is shown.
 
 ## [0.3.0] - 2026-07-20
 

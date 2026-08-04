@@ -161,7 +161,6 @@ class AuthIQAuthenticationMethodClient {
 
         $instance["Detail"] = $this.BuildDetail($Method)
         $instance["Registered"] = $this.NormalizeDate($created)
-        $instance["LastUsed"] = $this.NormalizeDate($Method.lastUsedDateTime)
         $instance["PasskeyClass"] = $this.BuildPasskeyClass($Method)
 
         Return [pscustomobject]$instance
@@ -286,7 +285,6 @@ class AuthIQAuthenticationMethodClient {
         $instance["Model"] = ""
         $instance["Detail"] = "From certificateUserIds"
         $instance["Registered"] = $null
-        $instance["LastUsed"] = $null
         $instance["PasskeyClass"] = ""
 
         Return [pscustomobject]$instance
