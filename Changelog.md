@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User company and department (the Graph `companyName` and `department` attributes) are collected and shown as info chips in the user detail header (when present), are included in user search, and are added as `Company` and `Department` columns to the Method Inventory CSV export.
 - "Users Without MFA" CSV export: a one-row-per-user list of everyone with no registered MFA method, including email, company, department, default MFA method, and whether registration-report data was available. Highest-priority registration targets.
 - "Users Without PRMFA" CSV export: a one-row-per-user list of users who have MFA but no phishing-resistant method (disjoint from the no-MFA list; together they cover everyone lacking PRMFA), including email, company, department, default MFA method, and method count. The PRMFA upgrade targets.
+- "All Users" CSV export: one row for every user in the run, with `MfaStatus`, `PrmfaStatus`, `MethodCount` (enumerated) and `IsMfaRegistered` / `MethodsRegistered` (from Entra's report). The other exports capture only the extremes (users with methods, or users flagged as having none); a user whom Entra flags as MFA-registered but for whom no method was enumerated previously appeared in neither. This export accounts for every user and surfaces flag-vs-method gaps.
 
 ### Fixed
 

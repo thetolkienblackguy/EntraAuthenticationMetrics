@@ -465,6 +465,23 @@ function exportNoPrmfa() {
     downloadCsv(`entra_users_without_prmfa_${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }
 
+// Every user in the run, one row each - nobody falls between the other exports.
+// MethodCount is what the tool enumerated; IsMfaRegistered and MethodsRegistered
+// are what Entra's registration report claims, so flag-vs-method gaps are visible.
+function exportAllUsers() {
+    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "MethodCount", "IsMfaRegistered", "MethodsRegistered", "DefaultMfaMethod", "RegistrationDataKnown"]];
+    users.forEach(u => {
+        rows.push([
+            u.User, u.Email || "", u.Company || "", u.Department || "",
+            u.MfaStatus, u.PrmfaStatus, userMethods(u).length,
+            isUnknown(u.IsMfaRegistered) ? "Unknown" : (isTrue(u.IsMfaRegistered) ? "Yes" : "No"),
+            u.MethodsRegistered || "", u.DefaultMfaMethod || "none",
+            isTrue(u.HasRegistrationData) ? "Yes" : "No"
+        ]);
+    });
+    downloadCsv(`entra_all_users_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+}
+
 /* ---------- Navigation + events ---------- */
 
 function activateTab(name) {
@@ -496,6 +513,7 @@ function initEvents() {
     });
     document.getElementById("csv-no-mfa").addEventListener("click", exportNoMfa);
     document.getElementById("csv-no-prmfa").addEventListener("click", exportNoPrmfa);
+    document.getElementById("csv-all-users").addEventListener("click", exportAllUsers);
 
     // Hover tooltip for the statistics bar charts
     const tip = document.createElement("div");
