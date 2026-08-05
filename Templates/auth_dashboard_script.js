@@ -465,19 +465,29 @@ function exportNoPrmfa() {
     downloadCsv(`entra_users_without_prmfa_${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }
 
-// Every user in the run, one row each - nobody falls between the other exports.
-// MethodCount is what the tool enumerated; IsMfaRegistered and MethodsRegistered
-// are what Entra's registration report claims, so flag-vs-method gaps are visible.
+// Every user in the run, with one row per enumerated auth method (full method
+// detail), and a single method-blank row for users with no method - so nobody
+// falls between the other exports. MethodCount is what the tool enumerated;
+// IsMfaRegistered and MethodsRegistered are what Entra's report claims, so
+// flag-vs-method gaps are visible.
 function exportAllUsers() {
-    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "MethodCount", "IsMfaRegistered", "MethodsRegistered", "DefaultMfaMethod", "RegistrationDataKnown"]];
+    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "MethodCount", "IsMfaRegistered", "MethodsRegistered", "DefaultMfaMethod", "RegistrationDataKnown", "Category", "Strength", "Name", "Model", "Detail", "Registered"]];
     users.forEach(u => {
-        rows.push([
+        const base = [
             u.User, u.Email || "", u.Company || "", u.Department || "",
             u.MfaStatus, u.PrmfaStatus, userMethods(u).length,
             isUnknown(u.IsMfaRegistered) ? "Unknown" : (isTrue(u.IsMfaRegistered) ? "Yes" : "No"),
             u.MethodsRegistered || "", u.DefaultMfaMethod || "none",
             isTrue(u.HasRegistrationData) ? "Yes" : "No"
-        ]);
+        ];
+        const methods = userMethods(u);
+        if (methods.length) {
+            methods.forEach(m => {
+                rows.push(base.concat([m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || ""]));
+            });
+        } else {
+            rows.push(base.concat(["", "", "", "", "", ""]));
+        }
     });
     downloadCsv(`entra_all_users_${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }

@@ -91,7 +91,7 @@ Notes:
   - Method Inventory CSV export (one row per user/method, includes email, company, department, both statuses)
   - Users Without MFA CSV export (no registered MFA at all: highest-priority targets)
   - Users Without PRMFA CSV export (have MFA but no phishing-resistant method: upgrade targets)
-  - All Users CSV export (one row per user, with MethodCount vs the Entra report flag so gaps are visible)
+  - All Users CSV export (one row per auth method, plus a single row for method-less users; includes method detail and MethodCount vs the Entra report flag so gaps are visible)
   - Registration capability (MFA / passwordless / SSPR, default method) from the Entra userRegistrationDetails report
 
 - 📋 **Reporting Options**
@@ -250,7 +250,7 @@ Three CSV exports are available from the dashboard header:
 - **Export Method Inventory CSV** - one row per user / method instance, including user email, company, department, `MfaStatus`, `PrmfaStatus`, method category, strength, and registered date.
 - **Export Users Without MFA** - one row per user with no registered MFA method at all, with email, company, department, default MFA method, and whether registration-report data was available. Highest-priority registration targets.
 - **Export Users Without PRMFA** - one row per user who has MFA but no phishing-resistant method, with email, company, department, default MFA method, and method count. The PRMFA upgrade targets. Together with the no-MFA list this covers everyone lacking phishing-resistant MFA.
-- **Export All Users** - one row for every user in the run, with `MfaStatus`, `PrmfaStatus`, `MethodCount` (what the tool enumerated), and `IsMfaRegistered` / `MethodsRegistered` (what Entra's registration report claims). Nobody is omitted, and where the enumerated method count disagrees with the report flag (common in Okta-federated tenants) the gap is visible per user.
+- **Export All Users** - one row per enumerated auth method (with full method detail: category, strength, name, model, detail, registered date), plus a single method-blank row for users with no method, so every user in the run is present. Each row also carries `MfaStatus`, `PrmfaStatus`, `MethodCount` (what the tool enumerated), and `IsMfaRegistered` / `MethodsRegistered` (what Entra's registration report claims). Where the enumerated method count disagrees with the report flag (common in Okta-federated tenants) the gap is visible per user.
 
 > The standalone `New-EAMAuthenticationReport` cmdlet was removed in 0.4.0. If you need the report rows in a variable for scripting, capture the report path from `Invoke-AuthIQDashboardCreation` and use the dashboard CSV export, or open an issue if a dedicated data cmdlet would help your workflow.
 
