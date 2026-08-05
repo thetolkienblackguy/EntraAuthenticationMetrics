@@ -86,10 +86,13 @@ class AuthIQAuthenticationMethodClient {
         $record["MethodCount"] = $method_instances.Count
         $this.AddRegistrationDetails($record, $User.id, $RegistrationLookup)
 
-        # Two tracked statuses. MFA is registered if the user holds any method or
-        # the registration report says so; PRMFA requires a phishing-resistant
-        # method. PRMFA is always a subset of MFA.
-        $mfa_registered = ($method_instances.Count -gt 0) -or ($record["IsMfaRegistered"] -eq $true)
+        # Two tracked statuses, both from the live methods enumerated above. MFA is
+        # registered if the user holds any method; PRMFA requires a phishing-resistant
+        # one. The registration report's isMfaRegistered flag is deliberately not used:
+        # it lags the live data by up to ~36 hours and is unreliable in both directions
+        # (for example, false while a Windows Hello for Business method exists). It is
+        # still captured separately (IsMfaRegistered / MethodsRegistered) for reference.
+        $mfa_registered = $method_instances.Count -gt 0
         $record["MfaStatus"] = If ($mfa_registered) {
             "Registered"
 
