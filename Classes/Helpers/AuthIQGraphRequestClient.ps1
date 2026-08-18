@@ -104,13 +104,44 @@ class AuthIQGraphRequestClient {
 
                 }
 
-                Throw "Error during pagination: $($_.Exception.Message)"
+                $failed_uri = $Params["Uri"]
+
+                If ($status_code -eq 403) {
+                    $hint = $this.PermissionHintForUri($failed_uri)
+                    Throw "Access denied (403) calling $failed_uri. The signed-in account or app is missing the required permission$hint. For delegated (interactive) sign-in the account must also hold a supporting directory role (for example Reports Reader, Security Reader, or Global Reader)."
+
+                }
+
+                Throw "Graph request failed ($status_code) calling $($failed_uri): $($_.Exception.Message)"
 
             }
 
         } Until (!$next_link)
 
         Return $results
+
+    }
+
+    # Best-effort mapping of a failing Graph URI to the permission it needs, for 403 messages.
+    hidden [string]PermissionHintForUri([string]$Uri) {
+        $map = [ordered]@{
+            "userRegistrationDetails"   = "AuditLog.Read.All"
+            "authentication/methods"    = "UserAuthenticationMethod.Read.All"
+            "transitiveMembers"         = "GroupMember.Read.All"
+            "/groups"                   = "GroupMember.Read.All"
+            "/organization"             = "Organization.Read.All (application) or User.Read (delegated)"
+            "/users"                    = "User.Read.All"
+        }
+
+        ForEach ($key in $map.Keys) {
+            If ($Uri -like "*$key*") {
+                Return " ($($map[$key]))"
+
+            }
+
+        }
+
+        Return ""
 
     }
 
