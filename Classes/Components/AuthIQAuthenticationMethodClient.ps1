@@ -17,6 +17,18 @@ class AuthIQAuthenticationMethodClient {
 
         $raw_methods = $this.GetUserMethods($User.id)
 
+        # clientAppName (standalone Authenticator vs Authenticator Lite in Outlook
+        # mobile) is not returned by the aggregate /authentication/methods endpoint.
+        # When the user has an Authenticator method, fetch it once from the
+        # type-specific microsoftAuthenticatorMethods endpoint and map it by id.
+        $authenticator_type = "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod"
+        $client_app_map = @{}
+
+        If (@($raw_methods) | Where-Object { $_."@odata.type" -eq $authenticator_type }) {
+            $client_app_map = $this.GetAuthenticatorClientApps($User.id)
+
+        }
+
         ForEach ($method in $raw_methods) {
             $type = $method."@odata.type"
 
@@ -35,6 +47,25 @@ class AuthIQAuthenticationMethodClient {
 
             $info = [AuthIQAuthenticationMethodInfo]::GetInfo($type)
             $instance = $this.BuildInstance($method, $info)
+
+            If ($type -eq $authenticator_type -and $client_app_map.ContainsKey($method.id)) {
+                $app_name = "$($client_app_map[$method.id])"
+                $instance.ClientApp = $this.MapClientApp($app_name)
+
+                If ($app_name -eq "outlookMobile") {
+                    $lite = "Authenticator Lite (Outlook mobile)"
+                    $instance.Detail = If ($instance.Detail) {
+                        "$lite - $($instance.Detail)"
+
+                    } Else {
+                        $lite
+
+                    }
+
+                }
+
+            }
+
             $method_instances.Add($instance)
 
             If ($info.Strength -eq "strong") {
@@ -197,10 +228,16 @@ class AuthIQAuthenticationMethodClient {
 
     }
 
-    # Microsoft Authenticator clientAppName (beta) - which app the registration lives in.
-    # Blank for method types that do not expose it.
+    # Microsoft Authenticator clientAppName - which app the registration lives in.
+    # The aggregate methods endpoint does not return it, so it is resolved from the
+    # type-specific endpoint (see GetAuthenticatorClientApps) and mapped here.
     hidden [string]BuildClientApp([object]$Method) {
-        Switch ("$($Method.clientAppName)") {
+        Return $this.MapClientApp("$($Method.clientAppName)")
+
+    }
+
+    hidden [string]MapClientApp([string]$ClientAppName) {
+        Switch ($ClientAppName) {
             "outlookMobile" {
                 Return "Outlook mobile"
 
@@ -215,6 +252,33 @@ class AuthIQAuthenticationMethodClient {
         }
 
         Return ""
+
+    }
+
+    # Fetch clientAppName from the type-specific microsoftAuthenticatorMethods endpoint,
+    # which (unlike the aggregate methods list) returns it. Returns a map of method
+    # id -> clientAppName. Non-fatal: on error the map is empty and ClientApp stays blank.
+    hidden [hashtable]GetAuthenticatorClientApps([string]$UserId) {
+        $map = @{}
+
+        Try {
+            $segments = @($UserId, "authentication", "microsoftAuthenticatorMethods")
+            $results = $this.Client.InvokeGetRequest("users", $segments, $null, $null)
+
+            ForEach ($item in $results) {
+                If ($item.id) {
+                    $map[$item.id] = "$($item.clientAppName)"
+
+                }
+
+            }
+
+        } Catch {
+            Write-Debug "Could not read microsoftAuthenticatorMethods for $($UserId): $($_.Exception.Message)"
+
+        }
+
+        Return $map
 
     }
 
@@ -246,13 +310,6 @@ class AuthIQAuthenticationMethodClient {
 
             } "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod" {
                 $parts = [System.Collections.Generic.List[string]]::new()
-
-                # clientAppName (beta) distinguishes the standalone Authenticator app
-                # from Authenticator Lite embedded in Outlook mobile.
-                If ($Method.clientAppName -eq "outlookMobile") {
-                    $parts.Add("Authenticator Lite (Outlook mobile)")
-
-                }
 
                 If ($Method.deviceTag) {
                     $parts.Add($Method.deviceTag)

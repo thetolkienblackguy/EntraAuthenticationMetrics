@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Microsoft Authenticator registrations now surface the `clientAppName` (beta), distinguishing the standalone Authenticator app from Authenticator Lite embedded in Outlook mobile. It appears in the method detail ("Authenticator Lite (Outlook mobile)") and as a dedicated `ClientApp` column in the Method Inventory and All Users CSV exports.
+- Microsoft Authenticator registrations now surface the `clientAppName`, distinguishing the standalone Authenticator app from Authenticator Lite embedded in Outlook mobile. The aggregate `/authentication/methods` endpoint does not return this property, so for each user with an Authenticator method the tool makes one supplemental call to the type-specific `/authentication/microsoftAuthenticatorMethods` endpoint (non-fatal on error). It appears in the method detail ("Authenticator Lite (Outlook mobile)") and as a dedicated `ClientApp` column in the Method Inventory and All Users CSV exports.
 - Disabled accounts (`accountEnabled = false`) are now excluded from all reporting (dashboard, counts, and CSV exports). They are not registration targets and Entra omits them from the `userRegistrationDetails` report, which previously showed them with an Unknown registration state.
 - Per-user status is now tracked as two clearly-named fields, `MfaStatus` and `PrmfaStatus`, each `Registered` / `Not Registered`. This replaces the single `PRMFAStatus` field whose `Enabled` / `Disabled` values only described phishing-resistant coverage and were easily confused with the account state. Both statuses are computed once in the module (PRMFA is always a subset of MFA) and are included as columns in the Method Inventory CSV export.
 
