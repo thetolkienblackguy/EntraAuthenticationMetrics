@@ -84,6 +84,7 @@ Notes:
   - Master-detail view: per-user cards for every registered method
   - Per-method **registered** date (with relative age; stale methods highlighted)
   - Passkey detail (type + model), Windows Hello key strength, TAP usability, QR Code + PIN
+  - Microsoft Authenticator client app: distinguishes the standalone app from Authenticator Lite embedded in Outlook mobile (`ClientApp` column)
   - User email shown alongside the UPN (when it differs), plus company and department in the detail; all searchable
   - Real-time filtering, search, and sorting
   - Dark/Light mode toggle and adoption statistics (incl. Passkeys by Model)

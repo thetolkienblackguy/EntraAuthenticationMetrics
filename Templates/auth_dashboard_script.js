@@ -440,9 +440,9 @@ function downloadCsv(filename, rows) {
 }
 
 function exportInventory() {
-    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "Category", "Strength", "Name", "Model", "Detail", "Registered"]];
+    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "Category", "Strength", "Name", "Model", "ClientApp", "Detail", "Registered"]];
     users.forEach(u => userMethods(u).forEach(m => {
-        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", u.MfaStatus, u.PrmfaStatus, m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || ""]);
+        rows.push([u.User, u.Email || "", u.Company || "", u.Department || "", u.MfaStatus, u.PrmfaStatus, m.Category, m.Strength, m.Name, m.Model, m.ClientApp || "", m.Detail, m.Registered || ""]);
     }));
     downloadCsv(`entra_auth_method_inventory_${new Date().toISOString().slice(0, 10)}.csv`, rows);
 }
@@ -471,7 +471,7 @@ function exportNoPrmfa() {
 // IsMfaRegistered and MethodsRegistered are what Entra's report claims, so
 // flag-vs-method gaps are visible.
 function exportAllUsers() {
-    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "MethodCount", "IsMfaRegistered", "MethodsRegistered", "DefaultMfaMethod", "RegistrationDataKnown", "Category", "Strength", "Name", "Model", "Detail", "Registered"]];
+    const rows = [["User", "Email", "Company", "Department", "MfaStatus", "PrmfaStatus", "MethodCount", "IsMfaRegistered", "MethodsRegistered", "DefaultMfaMethod", "RegistrationDataKnown", "Category", "Strength", "Name", "Model", "ClientApp", "Detail", "Registered"]];
     users.forEach(u => {
         const base = [
             u.User, u.Email || "", u.Company || "", u.Department || "",
@@ -483,10 +483,10 @@ function exportAllUsers() {
         const methods = userMethods(u);
         if (methods.length) {
             methods.forEach(m => {
-                rows.push(base.concat([m.Category, m.Strength, m.Name, m.Model, m.Detail, m.Registered || ""]));
+                rows.push(base.concat([m.Category, m.Strength, m.Name, m.Model, m.ClientApp || "", m.Detail, m.Registered || ""]));
             });
         } else {
-            rows.push(base.concat(["", "", "", "", "", ""]));
+            rows.push(base.concat(["", "", "", "", "", "", ""]));
         }
     });
     downloadCsv(`entra_all_users_${new Date().toISOString().slice(0, 10)}.csv`, rows);

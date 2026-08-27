@@ -163,6 +163,7 @@ class AuthIQAuthenticationMethodClient {
         }
 
         $instance["Detail"] = $this.BuildDetail($Method)
+        $instance["ClientApp"] = $this.BuildClientApp($Method)
         $instance["Registered"] = $this.NormalizeDate($created)
         $instance["PasskeyClass"] = $this.BuildPasskeyClass($Method)
 
@@ -196,6 +197,27 @@ class AuthIQAuthenticationMethodClient {
 
     }
 
+    # Microsoft Authenticator clientAppName (beta) - which app the registration lives in.
+    # Blank for method types that do not expose it.
+    hidden [string]BuildClientApp([object]$Method) {
+        Switch ("$($Method.clientAppName)") {
+            "outlookMobile" {
+                Return "Outlook mobile"
+
+            } "microsoftAuthenticator" {
+                Return "Authenticator app"
+
+            } Default {
+                Return ""
+
+            }
+
+        }
+
+        Return ""
+
+    }
+
     hidden [string]BuildDetail([object]$Method) {
         $type = $Method."@odata.type"
 
@@ -224,6 +246,13 @@ class AuthIQAuthenticationMethodClient {
 
             } "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod" {
                 $parts = [System.Collections.Generic.List[string]]::new()
+
+                # clientAppName (beta) distinguishes the standalone Authenticator app
+                # from Authenticator Lite embedded in Outlook mobile.
+                If ($Method.clientAppName -eq "outlookMobile") {
+                    $parts.Add("Authenticator Lite (Outlook mobile)")
+
+                }
 
                 If ($Method.deviceTag) {
                     $parts.Add($Method.deviceTag)
@@ -287,6 +316,7 @@ class AuthIQAuthenticationMethodClient {
         $instance["Name"] = "Certificate-based"
         $instance["Model"] = ""
         $instance["Detail"] = "From certificateUserIds"
+        $instance["ClientApp"] = ""
         $instance["Registered"] = $null
         $instance["PasskeyClass"] = ""
 
